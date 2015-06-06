@@ -1,0 +1,73 @@
+on @*:text:!roulette:#: {
+  if ($readini(BotSettings.ini,$chan,Rouletteoff) = $null) {
+    if ($access($nick) <= $roulettelevel) {
+      set %roulette $rand(1,2)
+      ;set %roulette $rand(1,$iif($readini(BotSettings.ini,$chan,RouletteChance) != $null),$readini(BotSettings.ini,$chan,RouletteChance),2))
+      if (%roulette = 1) {
+        if ($access($nick) <= 500) {
+          msg $chan $user($nick) pulls the trigger... BANG! The gun fires, but you are defended by your mod armour.
+        }
+        else {
+          msg $chan $user($nick) pulls the trigger... BANG! The gun fires, you are killed instantly.
+          if ($readini(BotSettings.ini,$chan,RouletteTime) != Off) {
+            msg $chan /timeout $nick $iif($readini(BotSettings.ini,$chan,RouletteTime) != $null,$readini(BotSettings.ini,$chan,RouletteTime),30)
+          }
+        }
+        writeini PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) - $iif($readini(BotSettings.ini,$chan,RouletteLose) != $null,$readini(BotSettings.ini,$chan,RouletteLose),10))
+      }
+      else {
+        msg $chan $user($nick) pulls the trigger... CLICK! You survived this round.
+        writeini PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) + $iif($readini(BotSettings.ini,$chan,RouletteWin) != $null,$readini(BotSettings.ini,$chan,RouletteWin),10))
+      }
+    }
+  }
+}
+
+on @*:text:*!set roulette*:#:{
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      remini BotSettings.ini $chan RouletteOff
+      msg $chan $user($nick) -> Roulette has been Enabled.
+    }
+    if ($3 = off) {
+      writeini BotSettings.ini $chan RouletteOff .
+      msg $chan $user($nick) -> Roulette has been Disabled.
+    }
+    if ($3 = timeout) {
+      if ($4 = off) || ($4 = 0) {
+        writeini BotSettings.ini $chan RouletteTime Off
+      }
+      elseif ($4 isnum) {
+        writeini BotSettings.ini $chan RouletteTime $4
+      }
+    }
+    if ($3 = points) || ($3 = $points) {
+      if ($4 = win) {
+        if ($5 isnum) {
+          writeini BotSettings.ini $chan RouletteWin $5
+        }
+      }
+      if ($4 = lose) {
+        if ($5 isnum) {
+          writeini BotSettings.ini $chan RouletteLose $5
+        }
+      }
+    }
+  }
+}
+
+alias roulettelevel {
+  return $iif($readini(CommandLevels.ini,$chan,!roulette) != $null, $readini(CommandLevels.ini,$chan,!roulette), 800)
+}
+
+on @*:text:!level !roulette &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini CommandLevels.ini $chan !roulette $3
+      msg $chan $user($nick) -> The command userlevel for !roulette has been updated.
+    }
+    else {
+      msg $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
