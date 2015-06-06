@@ -1,0 +1,80 @@
+on @*:text:!raffle draw:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(BotSettings.ini,$chan,RaffleStatus) = Closed) {
+      msg $chan The winner is... $capital($ini(Raffle.ini, $chan, $rand(1,$ini(Raffle.ini,$chan,0)))) $+ !
+    }
+    else {
+      msg $chan $user($nick) -> You must close the raffle before choosing a winner.
+    }
+  }
+}
+
+on @*:text:!raffle random:#: {
+  if ($access($nick) <= 400) {
+    msg $chan The winner is... $capital($nick(#,$rand(1,$nick(#,0,a)),a))
+  }
+}
+
+on @*:text:!raffle open*:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(BotSettings.ini, $chan, RaffleStatus) = reset) {
+      writeini BotSettings.ini $chan RaffleStatus Open
+      if ($4 isnum 1-900) {
+        writeini BotSettings.ini $chan RaffleLevel $4
+      }
+      if ($3 isnum 1-900) {
+        writeini BotSettings.ini $chan RaffleLevel $3
+      }
+      elseif ($3) {
+        if ($left($3,1) = !) {
+          writeini BotSettings.ini $chan RaffleKey $3
+        }
+        else {
+          writeini BotSettings.ini $chan RaffleKey ! $+ $3
+        }
+      }
+      else {
+        writeini BotSettings.ini $chan RaffleKey !raffle
+        writeini BotSettings.ini $chan RaffleLevel 800
+      }
+      msg $chan /me > Raffle Open! Type ' $+ $readini(BotSettings.ini, $chan, RaffleKey) $+ ' to enter.
+    }
+    else {
+      msg $chan $user($nick) -> Other raffles must be closed and reset before another is opened.
+    }
+  }
+}
+
+on @*:text:!raffle close:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(BotSettings.ini, $chan, RaffleStatus) = open) {
+      writeini BotSettings.ini $chan RaffleStatus Closed
+      msg $chan /me > Raffle Closed! No more entries will be counted.
+    }
+    else {
+      msg $chan $user($nick) -> The raffle must be opened before it is closed.
+    }
+  }
+}
+
+on @*:text:!raffle reset:#: {
+  if ($access($nick) <= 400) {
+    remini Raffle.ini $chan
+    msg $chan $user($nick) -> The raffle has been reset.
+  }
+}
+
+on @*:text:*:#: {
+  if ($readini(BotSettings.ini, $chan, RaffleStatus) = open) {
+    if ($readini(BotSettings.ini, $chan, RaffleLevel) >= $access($nick)) {
+      if ($readini(BotSettings.ini, $chan, RaffleKey) = $1) {
+        if ($readini(Raffle.ini,$chan,$nick) != $null) { return }
+        writeini Raffle.ini $chan $nick .
+        if (!$($+(%,raffleflood.,$chan),2)) {
+          set -u30 $+(%,raffleflood.,$chan) ON
+          msg $chan One or more entries counted.
+        }
+      }
+    }
+  }
+}
