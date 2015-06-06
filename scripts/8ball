@@ -1,0 +1,61 @@
+on @*:text:!8Ball *:#:{
+  if ($access($nick) <= $iif($readini(CommandLevels.ini,$chan,!8ball) != $null, $readini(CommandLevels.ini,$chan,!8ball), 800)) {
+    8ball $chan
+  }
+}
+on @*:text:!set 8Ball*:#:{
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      remini BotSettings.ini $chan 8ballOff
+      msg $chan $user($nick) -> 8Ball has been Enabled.
+    }
+    if ($3 = off) {
+      writeini BotSettings.ini $chan 8ballOff .
+      msg $chan $user($nick) -> 8Ball has been Disabled.
+    }
+    else {
+      msg $chan $user($nick) -> The 8ball feature is currently $iif($readini(BotSettings.ini,$chan,8ballOff) = $null, on.,off.)
+    }
+  }
+}
+
+alias 8ballLevel {
+  return $iif($readini(CommandLevels.ini,$chan,!8ball) != $null, $readini(CommandLevels.ini,$chan,!8ball), 800)
+}
+
+on @*:text:!level !8ball &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini CommandLevels.ini $chan !8ball $3
+      msg $chan $user($nick) -> The command userlevel for !8ball has been updated.
+    }
+    else {
+      msg $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+alias 8ball {
+  set %8ball $rand(1,21)
+  if (%8Ball == 1)  msg $1 I'm thinking yes!
+  if (%8Ball == 2)  msg $1 Hell no! What were you thinking?!?!
+  if (%8Ball == 3)  msg $1 Ask nicer please
+  if (%8Ball == 4)  msg $1 I can't tell you that!
+  if (%8Ball == 5)  msg $1 Maybe.
+  if (%8Ball == 6)  msg $1 Definatly!
+  if (%8Ball == 7)  msg $1 Ask another time
+  if (%8Ball == 8)  msg $1 If you bow down to me. its a yes
+  if (%8Ball == 9)  msg $1 Are you sure you want to ask me that?
+  if (%8Ball == 10)  msg $1 Certainly not!
+  if (%8Ball == 11)  msg $1 Most likely
+  if (%8Ball == 12)  msg $1 Probly not. Sorry
+  if (%8Ball == 13)  msg $1 Problably not dude
+  if (%8Ball == 14)  msg $1 Signs pointing to yes!
+  if (%8Ball == 15)  msg $1 So is it a deal? or no deal?
+  if (%8Ball == 16)  msg $1 Im sorry, you are the weakest link, good bye
+  if (%8Ball == 17)  msg $1 Ill answer you if you give me five bucks
+  if (%8Ball == 18)  msg $1 Definantly NOT
+  if (%8Ball == 19)  msg $1 Doubtfull.
+  if (%8Ball == 20)  msg $1 A question I dont even have an answer to.
+  if (%8Ball == 21)  msg $1 What kind of question is that?
+}
