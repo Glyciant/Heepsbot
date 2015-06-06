@@ -1,0 +1,110 @@
+on @*:text:!poll open *:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Poll.ini, $chan, Status) = Open) {
+      msg $chan $user($nick) -> There is already a poll running, please close this before opening another.
+    }
+    elseif ($readini(Poll.ini, $chan, Status) = Closed) {
+      msg $chan $user($nick) -> The poll must be reset before another is opened.
+    }
+    else {
+      set %w $0
+      set %q 3
+      set %r 1
+      writeini -n Poll.ini $chan Status Open
+      writeini -n Poll.ini $chan Total $calc($0 - 2)
+      while (%q <= %w) {
+        writeini Poll.ini $chan $+(OpName,%r) $($+($,%q),2)
+        writeini Poll.ini $chan $+(OpNum,%r) 0
+        inc %q
+        inc %r
+      }
+      msg $chan /me > Poll Open! To vote, use !vote <Option Number 1- $+ $calc($0 - 2) $+ >
+    }
+  }
+}
+
+on @*:text:!poll close:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Poll.ini, $chan, Status) != Open) {
+      msg $chan $user($nick) -> The poll must be opened before it is closed.
+    }
+    else {
+      writeini -n Poll.ini $chan Status Closed
+      msg $chan /me > The poll has been closed! No more votes will be counted.
+    }
+  }
+}
+
+on @*:text:!poll reset:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Poll.ini, $chan, Status) != Closed) {
+      msg $chan $user($nick) -> The poll must be closed before it is reset.
+    }
+    else {
+      remini Poll.ini $chan 
+      writeini -n Poll.ini $chan Status Reset
+      msg $chan $user($nick) -> The poll has been reset.
+    }
+  }
+}
+
+on @*:text:!poll:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Poll.ini, $chan, Status) = Open) {
+      msg $chan $user($nick) -> The poll is currently open.
+    }
+    elseif ($readini(Poll.ini, $chan, Status) = Closed) {
+      msg $chan $user($nick) -> The poll is currently closed.
+    }
+    elseif ($readini(Poll.ini, $chan, Status) = Reset) {
+      msg $chan $user($nick) -> The poll is currently closed and has been reset.
+    }
+  }
+}
+
+on @*:text:!vote &:#: {
+  if ($readini(Poll.ini, $chan, Status) = Open) {
+    if ($2 !isnum) { return }
+    if ($readini(Poll.ini, $chan, $nick) != $null) {
+      set %p $readini(Poll.ini, $chan, $nick)
+      writeini Poll.ini $chan $+(OpNum,%p) $calc($readini(Poll.ini, $chan, $+(OpNum,%p)) - 1)
+    }
+    writeini Poll.ini $chan $+(OpNum,$2) $calc($readini(Poll.ini, $chan, $+(OpNum,$2)) + 1)
+    writeini Poll.ini $chan $nick $2
+    if (!$($+(%,pollmsg.,$chan),2)) { 
+      set -u30 $+(%,pollmsg.,$chan) ON
+      msg $chan One or more votes counted
+    }
+  }
+}
+
+on @*:text:!poll results*:#: {
+  if ($access($nick) <= 500) {
+    if (($3 = all) || (!$3)) {
+      set %l $readini(Poll.ini, $chan, Total)
+      set %k 1
+      while (%k <= %l) {
+        message $chan $readini(Poll.ini, $chan, $+(OpName,%k)) (Option %k $+ ) gained $readini(Poll.ini, $chan, $+(OpNum,%k)) votes.
+        inc %k
+      }
+    }
+    elseif ($3 = top) {
+      set %y 1
+      set %g $readini(Poll.ini, $chan, Total)
+      set %highscore 0
+      set %score 0
+      while (%y <= %g) {
+        set %score $readini(Poll.ini, $chan, $+(OpNum,%y))
+        if (%score > %highscore) {
+          set %highscore %score
+          set %highop %y
+        }
+        inc %y
+      }
+      msg $chan $readini(Poll.ini, $chan, $+(OpName,%highop)) (Option %highop $+ ) won with %highscore votes.
+    }
+    elseif ($3 isnum) {
+      msg $chan $readini(Poll.ini, $chan, $+(OpName,$3)) (Option $3 $+ ) gained $readini(Poll.ini, $chan, $+(OpNum,$3)) votes.
+    }
+  }
+}
