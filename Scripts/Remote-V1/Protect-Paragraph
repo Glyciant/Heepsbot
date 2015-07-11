@@ -1,0 +1,250 @@
+; Script Name: ProtectParagraph.ini
+; Type: Optional
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:text:!set paragraph*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Paragraph ON
+      message $chan $user($nick) -> Paragraph protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Paragraph
+      message $chan $user($nick) -> Paragraph protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan ParagraphMessage $4-
+      message $chan $user($nick) -> Paragraph message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan ParagraphVisible
+        message $chan $user($nick) -> Paragraph messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan ParagraphVisible .
+        message $chan $user($nick) -> Paragraph messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(ParagraphLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan ParagraphShort $4
+        message $chan $user($nick) -> The Paragraph short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(ParagraphShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan ParagraphLong $4
+        message $chan $user($nick) -> The Paragraph long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(ParagraphMin) = $null) {
+          writeini -n BotSettings.ini $chan ParagraphMax Purge
+          message $chan $user($nick) -> The Paragraph maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(ParagraphMin) = Ban) || ($BotSetting(ParagraphMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan ParagraphMax
+          message $chan $user($nick) -> The Paragraph maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(ParagraphMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan ParagraphMax Long
+          message $chan $user($nick) -> The Paragraph maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan ParagraphMax Ban
+        message $chan $user($nick) -> The Paragraph maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        remini BotSettings.ini $chan ParagraphMin
+        message $chan $user($nick) -> The Paragraph minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(ParagraphMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan ParagraphMin Short
+          message $chan $user($nick) -> The Paragraph minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(ParagraphMax) = Purge) || (($BotSetting(ParagraphMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan ParagraphMin Long
+          message $chan $user($nick) -> The Paragraph minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(ParagraphMax) = Ban) {
+          writeini -n BotSettings.ini $chan ParagraphMin Ban
+          message $chan $user($nick) -> The Paragraph minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan ParagraphWarning
+        message $chan $user($nick) -> The Paragraph ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan ParagraphWarning .
+        message $chan $user($nick) -> The Paragraph ban warning was disabled.
+      }
+    }
+    if ($3 = length) {
+      if ($4 isnum) {
+        writeini -n BotSettings.ini $chan ParagraphLength $4
+        message $chan $user($nick) -> Users who post messages longer then $4 characters will now be timed out.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a length.
+      }
+    }
+    if ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan ParagraphSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Paragraph Protection is currently $iif($BotSetting(Paragraph) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!forget paragraph *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,Paragraphban.,$chan,.,$3)
+    unset $+(%,Paragraphbanwarning.,$chan,.,$3)
+    unset $+(%,Paragraphshorttimeout.,$chan,.,$3)
+    unset $+(%,Paragraphlongtimeout.,$chan,.,$3)
+    unset $+(%,Paragraphpurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for Paragraph.
+  }
+}
+
+on *:text:*:#:{
+  if ($BotSetting(Paragraph) != $null) {
+    if ($len($1-) > $iif($BotSetting(ParagraphLength) != $null, $BotSetting(ParagraphLength),300)) {
+      if ($access($nick) <= $iif($BotSetting(ParagraphSafe) != $null,$BotSetting(ParagraphSafe),600)) { return }
+      if ($BotSetting(ParagraphWarning) = $null) && ($($+(%,Paragraphlongtimeout.,$chan,.,$nick),2)) {
+        Paragraphban $nick
+      }
+      elseif ($($+(%,Paragraphlongtimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(ParagraphMax) = Long) {
+          Paragraphlong $nick
+        }
+        elseif ($BotSetting(ParagraphWarning) = $null) {
+          Paragraphwarning $nick
+        }
+        else {
+          Paragraphban $nick
+        }
+      }
+      elseif ($($+(%,Paragraphshorttimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(ParagraphMax) = $null) {
+          Paragraphshort $nick
+        }
+        else {
+          Paragraphlong $nick
+        }
+      }
+      elseif ($($+(%,Paragraphpurge.,$chan,.,$nick),2)) {
+        if ($BotSetting(ParagraphMax) = Purge) {
+          Paragraphpurge $nick
+        }
+        else {
+          Paragraphshort $nick
+        }
+      }
+      else {
+        if ($BotSetting(ParagraphMin) = Ban) {
+          Paragraphban $nick
+        }
+        elseif ($BotSetting(ParagraphMin) = Long) {
+          Paragraphlong $nick
+        }
+        elseif ($BotSetting(ParagraphMin) = Short) {
+          Paragraphshort $nick
+        }
+        else {
+          Paragraphpurge $nick
+        }
+      }
+    }
+  }
+}
+
+alias Paragraphpurge {
+  set -u3600 $+(%,Paragraphpurge.,$chan,.,$nick) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(ParagraphVisible) = $null) {
+    message $chan $iif($BotSetting(ParagraphMessage) != $null,$BotSetting(ParagraphMessage),Please keep messages short!) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias Paragraphshort {
+  set -u3600 $+(%,Paragraphshorttimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(ParagraphShort) != $null,$BotSetting(ParagraphShort),600)
+  if ($BotSetting(ParagraphVisible) = $null) {
+    message $chan $iif($BotSetting(ParagraphMessage) != $null,$BotSetting(ParagraphMessage),Please keep messages short!) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias Paragraphlong {
+  set -u3600 $+(%,Paragraphlongtimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(ParagraphLong) != $null,$BotSetting(ParagraphLong),2880)
+  if ($BotSetting(ParagraphVisible) = $null) {
+    message $chan $iif($BotSetting(ParagraphMessage) != $null,$BotSetting(ParagraphMessage),Please keep messages short!) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias Paragraphwarning {
+  set -u3600 $+(%,Paragraphbanwarning.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(ParagraphLong) != $null,$BotSetting(ParagraphLong),2880)
+  if ($BotSetting(ParagraphVisible) = $null) {
+    message $chan $iif($BotSetting(ParagraphMessage) != $null,$BotSetting(ParagraphMessage),Please keep messages short!) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias Paragraphban {
+  set -u3600 $+(%,Paragraphban.,$chan,.,$nick) ON
+  message $chan /ban $1
+  if ($BotSetting(ParagraphVisible) = $null) {
+    message $chan $iif($BotSetting(ParagraphMessage) != $null,$BotSetting(ParagraphMessage),Please keep messages short!) ( $+ $user($1) $+ ) (Ban)
+  }
+}
