@@ -1,0 +1,266 @@
+; Script Name: ProtectCaps.ini
+; Type: Optional
+; Credits - Caps Detector: http://www.mirc.org/mishbox/protection/caps.htm
+; It is recommended that you do not modify this script.
+
+on *:text:!set caps*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Caps ON
+      message $chan $user($nick) -> Caps protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Caps
+      message $chan $user($nick) -> Caps protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan CapsMessage $4-
+      message $chan $user($nick) -> Caps message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan CapsVisible
+        message $chan $user($nick) -> Caps messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan CapsVisible .
+        message $chan $user($nick) -> Caps messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(CapsLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan CapsShort $4
+        message $chan $user($nick) -> The caps short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(CapsShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan CapsLong $4
+        message $chan $user($nick) -> The caps long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(CapsMin) = $null) {
+          writeini -n BotSettings.ini $chan CapsMax Purge
+          message $chan $user($nick) -> The caps maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(CapsMin) = Ban) || ($BotSetting(CapsMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan CapsMax
+          message $chan $user($nick) -> The caps maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(CapsMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan CapsMax Long
+          message $chan $user($nick) -> The caps maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan CapsMax Ban
+        message $chan $user($nick) -> The caps maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        remini BotSettings.ini $chan CapsMin
+        message $chan $user($nick) -> The caps minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(CapsMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan CapsMin Short
+          message $chan $user($nick) -> The caps minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(CapsMax) = Purge) || (($BotSetting(CapsMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan CapsMin Long
+          message $chan $user($nick) -> The caps minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(CapsMax) = Ban) {
+          writeini -n BotSettings.ini $chan CapsMin Ban
+          message $chan $user($nick) -> The caps minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan CapsWarning
+        message $chan $user($nick) -> The caps ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan CapsWarning .
+        message $chan $user($nick) -> The Caps ban warning was disabled.
+      }
+    }
+    elseif ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan CapsSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    if ($3 = allowed) {
+      if (($4 !isnum) || ($4 <= 100)) {
+        writeini -n BotSettings.ini $chan AllowedCaps $4
+        message $chan $user($nick) -> The allowed caps percentage was updated.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a number less than, or equal to, 100.
+      }
+    }
+    if ($3 = minchars) {
+      if ($4 isnum) {
+        writeini -n BotSettings.ini $chan CapsChars $4
+        message $chan $user($nick) -> Caps minimun letters updated.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a number.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Caps Protection is currently $iif($BotSetting(Caps) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!forget Caps *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,Capsban.,$chan,.,$3)
+    unset $+(%,Capsbanwarning.,$chan,.,$3)
+    unset $+(%,Capsshorttimeout.,$chan,.,$3)
+    unset $+(%,Capslongtimeout.,$chan,.,$3)
+    unset $+(%,Capspurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for caps.
+  }
+}
+
+alias allowedcaps { return $iif($BotSetting(AllowedCaps) != $null, $BotSettings.ini(AllowedCaps), 50 }
+on *:text:*:#:{
+  if ($BotSetting(Caps) != $null) {
+    if ($len($1-) < $iif($BotSetting(CapsChars) != $null, $BotSettings(CapsChars), 8)) { return }
+    var %caps.letters = $calc($len($1-) + 1 - $len($removecs(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z)))
+    var %caps = $calc($len($1-) - $len($removecs($1-,($1-),A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z)))
+    var %caps.percent = $round($calc(%caps / %caps.letters * 100),0)
+    if (%caps.percent > $allowedcaps) {
+      if ($BotSetting(Caps) != $null) {
+        if ($access($nick) <= $iif($BotSetting(CapsSafe) != $null,$BotSetting(CapsSafe),600)) { return }
+        if ($BotSetting(CapsWarning) = $null) && ($($+(%,Capslongtimeout.,$chan,.,$nick),2)) {
+          Capsban $nick
+        }
+        elseif ($($+(%,Capslongtimeout.,$chan,.,$nick),2)) {
+          if ($BotSetting(CapsMax) = Long) {
+            Capslong $nick
+          }
+          elseif ($BotSetting(CapsWarning) = $null) {
+            Capswarning $nick
+          }
+          else {
+            Capsban $nick
+          }
+        }
+        elseif ($($+(%,Capsshorttimeout.,$chan,.,$nick),2)) {
+          if ($BotSetting(CapsMax) = $null) {
+            Capsshort $nick
+          }
+          else {
+            Capslong $nick
+          }
+        }
+        elseif ($($+(%,Capspurge.,$chan,.,$nick),2)) {
+          if ($BotSetting(CapsMax) = Purge) {
+            Capspurge $nick
+          }
+          else {
+            Capsshort $nick
+          }
+        }
+        else {
+          if ($BotSetting(CapsMin) = Ban) {
+            Capsban $nick
+          }
+          elseif ($BotSetting(CapsMin) = Long) {
+            Capslong $nick
+          }
+          elseif ($BotSetting(CapsMin) = Short) {
+            Capsshort $nick
+          }
+          else {
+            Capspurge $nick
+          }
+        }
+      }
+    }
+  }
+}
+
+alias Capspurge {
+  set -u3600 $+(%,Capspurge.,$chan,.,$nick) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(CapsVisible) = $null) {
+    message $chan $iif($BotSetting(CapsMessage) != $null,$BotSetting(CapsMessage),Less of the shouting please!) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias Capsshort {
+  set -u3600 $+(%,Capsshorttimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(CapsShort) != $null,$BotSetting(CapsShort),600)
+  if ($BotSetting(CapsVisible) = $null) {
+    message $chan $iif($BotSetting(CapsMessage) != $null,$BotSetting(CapsMessage),Less of the shouting please!) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias Capslong {
+  set -u3600 $+(%,Capslongtimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(CapsLong) != $null,$BotSetting(CapsLong),2880)
+  if ($BotSetting(CapsVisible) = $null) {
+    message $chan $iif($BotSetting(CapsMessage) != $null,$BotSetting(CapsMessage),Less of the shouting please!) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias Capswarning {
+  set -u3600 $+(%,Capsbanwarning.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(CapsLong) != $null,$BotSetting(CapsLong),2880)
+  if ($BotSetting(CapsVisible) = $null) {
+    message $chan $iif($BotSetting(CapsMessage) != $null,$BotSetting(CapsMessage),Less of the shouting please!) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias Capsban {
+  set -u3600 $+(%,Capsban.,$chan,.,$nick) ON
+  message $chan /ban $1
+  if ($BotSetting(CapsVisible) = $null) {
+    message $chan $iif($BotSetting(CapsMessage) != $null,$BotSetting(CapsMessage),Less of the shouting please!) ( $+ $user($1) $+ ) (Ban)
+  }
+}
