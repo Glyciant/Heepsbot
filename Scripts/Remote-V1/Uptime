@@ -1,0 +1,67 @@
+; Script Name: Uptime.ini
+; Type: Optional
+; Credits - Base Script: http://forums.mirc.com/ubbthreads.php/ubb/showflat/Number/247767/Searchpage/1/Main/46779/Words/%21uptime/Search/true/Re:_Little_socket_script_-_pro#Post247767
+; You may edit this script.
+
+on *:text:!set uptime &:#: {
+  if ($access($nick) <= $UptimeLevel) {
+    if ($3 = on) {
+      remini BotSettings.ini $chan UptimeOff
+      message $chan $user($nick) -> The !uptime command has been enabled.
+    }
+    if ($3 = off) {
+      writeini -n BotSettings.ini $chan UptimeOff .
+      message $chan $user($nick) -> The !uptime command has been disabled.
+    }
+  }
+}
+
+alias UptimeLevel {
+  return $iif($readini(CommandLevels.ini,$chan,!uptime) != $null, $readini(CommandLevels.ini,$chan,!uptime), 800)
+}
+
+on *:text:!level !uptime &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !uptime $3
+      message $chan $user($nick) -> The command userlevel for !uptime has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+on *:text:!uptime*:#:{
+  set %target $iif($2,$2,$mid(#,2-))
+  set %channel $chan
+  uptime 
+}
+
+;Uptime sockets from http://forums.mirc.com/ubbthreads.php/ubb/showflat/Number/247767/Searchpage/1/Main/46779/Words/%21uptime/Search/true/Re:_Little_socket_script_-_pro#Post247767
+
+alias uptime {
+  sockclose uptime
+  sockopen uptime nightdev.com 80
+}
+
+on *:sockopen:uptime:{
+  if ($sockerr) { sockclose $sockname | halt }
+  sockwrite -n $sockname GET /hosted/uptime.php?channel= $+ %target HTTP/1.1
+  sockwrite -n $sockname Host: www.nightdev.com 
+  sockwrite -n $sockname $crlf
+}
+
+on *:sockread:uptime:{
+  if ($sockerr) { sockclose $sockname | halt }
+  var %data
+  sockread %data
+  tokenize 32 %data
+  if ($1 isnum) && ($2) { message %channel Stream Uptime: $1- }
+  elseif (%data == The channel is not live.) message %channel The stream is currently offline.
+}
+
+on *:sockclose:uptime:{ 
+  unset %channel
+  unset %target
+}
