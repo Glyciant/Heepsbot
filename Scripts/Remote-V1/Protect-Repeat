@@ -1,0 +1,265 @@
+; Script Name: ProtectRepeats.ini
+; Type: Optional
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:text:!set repeats*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Repeats ON
+      message $chan $user($nick) -> Repeats protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Repeats
+      message $chan $user($nick) -> Repeats protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan RepeatsMessage $4-
+      message $chan $user($nick) -> Repeats message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan RepeatsVisible
+        message $chan $user($nick) -> Repeats messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan RepeatsVisible .
+        message $chan $user($nick) -> Repeats messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(RepeatsLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan RepeatsShort $4
+        message $chan $user($nick) -> The Repeats short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(RepeatsShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan RepeatsLong $4
+        message $chan $user($nick) -> The Repeats long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(RepeatsMin) = $null) {
+          writeini -n BotSettings.ini $chan RepeatsMax Purge
+          message $chan $user($nick) -> The Repeats maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(RepeatsMin) = Ban) || ($BotSetting(RepeatsMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan RepeatsMax
+          message $chan $user($nick) -> The Repeats maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(RepeatsMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan RepeatsMax Long
+          message $chan $user($nick) -> The Repeats maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan RepeatsMax Ban
+        message $chan $user($nick) -> The Repeats maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        remini BotSettings.ini $chan RepeatsMin
+        message $chan $user($nick) -> The Repeats minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(RepeatsMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan RepeatsMin Short
+          message $chan $user($nick) -> The Repeats minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(RepeatsMax) = Purge) || (($BotSetting(RepeatsMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan RepeatsMin Long
+          message $chan $user($nick) -> The Repeats minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(RepeatsMax) = Ban) {
+          writeini -n BotSettings.ini $chan RepeatsMin Ban
+          message $chan $user($nick) -> The Repeats minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan RepeatsWarning
+        message $chan $user($nick) -> The Repeats ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan RepeatsWarning .
+        message $chan $user($nick) -> The Repeats ban warning was disabled.
+      }
+    }
+    if ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan RepeatsSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    if ($3 = chances) {
+      if ($4 isnum) {
+        writeini -n BotSettings.ini $chan RepeatChances
+        message $chan $user($nick) -> Users now have $4 chances to stop repeating.
+      }
+    }
+    if ($3 = allowed) {
+      if (($4 !isnum) || ($4 <= 100)) {
+        writeini -n BotSettings.ini $chan AllowedRepeats $4
+        message $chan $user($nick) -> The allowed Repeats percentage was updated.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a number less than, or equal to, 100.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Repeats Protection is currently $iif($BotSetting(Repeats) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!forget repeats *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,Repeatsban.,$chan,.,$3)
+    unset $+(%,Repeatsbanwarning.,$chan,.,$3)
+    unset $+(%,Repeatsshorttimeout.,$chan,.,$3)
+    unset $+(%,Repeatslongtimeout.,$chan,.,$3)
+    unset $+(%,Repeatspurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for Repeats.
+  }
+}
+
+on *:text:*:#:{
+  if ($BotSetting(Repeats) != $null) {
+    if ($1- = $readini(LastMessages.ini,$chan,$nick) {
+      if ($readini(RepeatChances.ini,$chan,$nick) > $iif($BotSetting(RepeatsChances) != $null,$BotSetting(RepeatsChances,3)) {
+        if ($access($nick) <= $iif($BotSetting(RepeatsSafe) != $null,$BotSetting(RepeatsSafe),600)) { return }
+        if ($BotSetting(RepeatsWarning) = $null) && ($($+(%,Repeatslongtimeout.,$chan,.,$nick),2)) {
+          Repeatsban $nick
+        }
+        elseif ($($+(%,Repeatslongtimeout.,$chan,.,$nick),2)) {
+          if ($BotSetting(RepeatsMax) = Long) {
+            Repeatslong $nick
+          }
+          elseif ($BotSetting(RepeatsWarning) = $null) {
+            Repeatswarning $nick
+          }
+          else {
+            Repeatsban $nick
+          }
+        }
+        elseif ($($+(%,Repeatsshorttimeout.,$chan,.,$nick),2)) {
+          if ($BotSetting(RepeatsMax) = $null) {
+            Repeatsshort $nick
+          }
+          else {
+            Repeatslong $nick
+          }
+        }
+        elseif ($($+(%,Repeatspurge.,$chan,.,$nick),2)) {
+          if ($BotSetting(RepeatsMax) = Purge) {
+            Repeatspurge $nick
+          }
+          else {
+            Repeatsshort $nick
+          }
+        }
+        else {
+          if ($BotSetting(RepeatsMin) = Ban) {
+            Repeatsban $nick
+          }
+          elseif ($BotSetting(RepeatsMin) = Long) {
+            Repeatslong $nick
+          }
+          elseif ($BotSetting(RepeatsMin) = Short) {
+            Repeatsshort $nick
+          }
+          else {
+            Repeatspurge $nick
+          }
+        }
+      }
+      else {
+        writeini -n RepeatChances.ini $chan $nick $calc($readini(RepeatChances.ini,$chan,$nick) + 1)
+      }
+    }
+    else {
+      writeini -n LastMessages.ini $chan $nick $1-
+      writeini -n RepeatChances.ini $chan $nick 1
+    }
+  }
+}
+
+alias Repeatspurge {
+  set -u3600 $+(%,Repeatspurge.,$chan,.,$nick) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(RepeatsVisible) = $null) {
+    message $chan $iif($BotSetting(RepeatsMessage) != $null,$BotSetting(RepeatsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias Repeatsshort {
+  set -u3600 $+(%,Repeatsshorttimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(RepeatsShort) != $null,$BotSetting(RepeatsShort),600)
+  if ($BotSetting(RepeatsVisible) = $null) {
+    message $chan $iif($BotSetting(RepeatsMessage) != $null,$BotSetting(RepeatsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias Repeatslong {
+  set -u3600 $+(%,Repeatslongtimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(RepeatsLong) != $null,$BotSetting(RepeatsLong),2880)
+  if ($BotSetting(RepeatsVisible) = $null) {
+    message $chan $iif($BotSetting(RepeatsMessage) != $null,$BotSetting(RepeatsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias Repeatswarning {
+  set -u3600 $+(%,Repeatsbanwarning.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(RepeatsLong) != $null,$BotSetting(RepeatsLong),2880)
+  if ($BotSetting(RepeatsVisible) = $null) {
+    message $chan $iif($BotSetting(RepeatsMessage) != $null,$BotSetting(RepeatsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias Repeatsban {
+  set -u3600 $+(%,Repeatsban.,$chan,.,$nick) ON
+  message $chan /ban $1
+  if ($BotSetting(RepeatsVisible) = $null) {
+    message $chan $iif($BotSetting(RepeatsMessage) != $null,$BotSetting(RepeatsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Ban)
+  }
+}
