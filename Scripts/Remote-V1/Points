@@ -1,0 +1,338 @@
+; Script Name: Points.ini
+; Type: Recommended
+; Credits - None
+; You may edit this script.
+
+on *:text:!autopoints*:#: {
+  if ($access($nick) <= 400) {
+    if ($2 = join) {
+      if ($3 isnum) {
+        writeini -n BotSettings.ini $chan JoinPointsNum $4
+        message $chan $user($nick) -> Users will now automatically be given $4 $points when they join the channel.
+      }
+      elseif ($3 = on) {
+        if ($BotSetting( JoinPointsNum) = $null) {
+          writeini -n BotSettings.ini $chan JoinPointsNum 10
+        }
+        writeini -n BotSettings.ini $chan JoinPoints True
+        message $chan $user($nick) -> Users will now automatically be given $BotSetting( JoinPointsNum) $points when they join the channel.
+      }
+      elseif ($3 = off) {
+        remini BotSettings.ini $chan JoinPoints
+        message $chan $user($nick) -> Users will now not be given $points when they join the channel.
+      }
+    }
+    elseif ($2 = follow) {
+      if ($3 isnum) {
+        writeini -n BotSettings.ini $chan FollowPointsNum  $3
+        message $chan $user($nick) -> Users will now automatically be given $4 $points when they follow the channel.
+      }
+      elseif ($3 = on) {
+        if ($BotSetting( SubPointsNum) = $null) {
+          writeini -n BotSettings.ini $chan SubPointsNum 50
+        }
+        writeini -n BotSettings.ini $chan FollowPoints True
+        message $chan $user($nick) -> Users will now automatically be given $BotSetting( JoinPointsNum) $points when they follow the channel.
+      }
+      elseif ($3 = off) {
+        remini BotSettings.ini $chan FollowPoints
+        message $chan $user($nick) -> Users will now not be given $points when they follow the channel.
+      }
+    }
+    elseif ($2 = subscribe) {
+      if ($3 isnum) {
+        writeini -n BotSettings.ini $chan SubPointsNum  $3
+        message $chan $user($nick) -> Users will now automatically be given $4 $points when they subscribe to the channel.
+      }
+      elseif ($3 = on) {
+        if ($BotSetting( SubPointsNum) = $null) {
+          writeini -n BotSettings.ini $chan SubPointsNum 100
+        }
+        writeini -n BotSettings.ini $chan SubPoints True
+        message $chan $user($nick) -> Users will now automatically be given $BotSetting( JoinPointsNum) $points when they subscribe to the channel.
+      }
+      elseif ($3 = off) {
+        remini BotSettings.ini $chan SubPoints
+        message $chan $user($nick) -> Users will now not be given $points when they subscribe to the channel.
+      }
+    }
+    elseif ($2 = timer) {
+      if ($3 = on) {
+        if ($BotSetting( PointTimerTime) = $null) {
+          writeini -n BotSettings.ini $chan PointTimerTime 60
+        }
+        writeini -n BotSettings.ini $chan PointsTimer True
+        message $chan $user($nick) -> $points timer has been enabled.
+      }
+      if ($3 = off) {
+        remini BotSettings.ini $chan PointsTimer
+        $+(timerpoints.,$chan* off)
+        message $chan $user($nick) -> $points timer has been disabled.
+      }
+      if ($3 = points) {
+        if ($4 = isnum) {
+          writeini -n BotSettings.ini $chan PointTimerPoint $4
+          message $chan $user($nick) -> Users will now be given $4 $points every $iif($BotSetting( PointTimerTime) != $null,$BotSetting( PointTimerTime),60)
+        }
+      }
+      if ($3 = frequency) {
+        if ($4 isnum) {
+          writeini -n BotSettings.ini $chan PointTimerTime $4
+          message $chan $user($nick) -> Users will now automatically be given $iif($BotSetting( PointTimerPoint) != $null,$BotSetting( PointTimerPoint),1) $points every $4 seconds.
+        }
+      }
+    }
+  }
+}
+
+on *:join:#:{
+  if ($BotSetting( PointTimer) != $null) {
+    $+(timerpoints.,$chan 0 $iif($BotSetting( PointTimerTime) != $null,$BotSetting( PointTimerTime),60) TimedPoints $chan $nick $iif($BotSetting( PointTimerPoint) != $null,$BotSetting( PointTimerPoint),1)
+  }
+}
+
+on *:part:#: {
+  $+(timerpoints.,$chan off)
+}
+
+alias TimedPoints {
+  while ($($+(%,p.,$1),2) <= $nick($1,0,a)) {
+    set $+(%,puser.,$1) $nick($1,$($+(%,p.,$1),2),a)
+    writeini -n PointsUpdated.ini $chan $($+(%,puser.,$1),2) $calc($readini(PointsUpdated.ini,$chan,$($+(%,puser.,$1),2)) $iif($2 == add,+,-) $iif($BotSetting( PointTimerPoint) != $null,$BotSetting( PointTimerPoint),1)
+    inc $+(%,p.,$1)
+  }  
+}
+
+alias points {
+  return $BotSetting( PointsName)
+}
+
+on *:text:!claim open &:#: {
+  if ($access($nick) <= 500) {
+    if ($3 isnum) {
+      if ($BotSetting( ClaimPoints) != $null) {
+        message $chan $user($nick) -> Please close the existing claim before opening another.
+      }
+      else {
+        writeini -n BotSettings.ini $chan ClaimPoints $3
+        message $chan /me > Claim Open! Type !claim to get your $3 $points $+ !
+      }
+    }
+  }
+}
+
+on *:text:!claim close:#: {
+  if ($access($nick) <= 500) {
+    if ($BotSetting( ClaimPoints) != $null) {
+      remini BotSettings.ini $chan ClaimPoints
+      remini Claim.ini $chan
+      message $chan /me > Claim Closed! No more $points will be given.
+    }
+    else {
+      message $chan $user($nick) -> There is currently no claim open.
+    }
+  }
+}
+
+on *:text:!claim:#: {
+  if ($readini(Claim.ini, $chan, $nick) = True) { return }
+  var %points $calc($BotSetting( ClaimPoints) + $readini(PointsUpdated.ini, n, $chan, $nick))
+  writeini -n PointsUpdated.ini $chan $nick %points
+  writeini -n Claim.ini $chan $nick True
+  if ($($+(%,floodclaimmessage.,$chan),2) = ON) { return }
+  else { 
+    set -u30 $+(%,floodclaimmessage.,$chan) ON 
+    message $chan One or more claims counted.
+  }
+}
+
+on *:text:!pointsname*:#: {
+  if ($access($nick) <= 400) {
+    if ($3) {
+      message $chan $user($nick) -> The points name can only be one word. | return
+    }
+    elseif (!$2) {
+      message $chan The current points name on this channel is: $points $+ .
+    }
+    else {
+      writeini -n BotSettings.ini $chan PointsName $2
+      message $chan $user($nick) -> The points name has been updated to $points $+ . 
+    }
+  }
+}
+
+on *:text:* just subscribed!:#: {
+  if ($nick = twitchnotify) {
+    SubAddPoints $1
+  }
+}
+
+on *:text:*:#: {
+  if ($1 = $($+(!,$points),2)) {
+    if ($2 = give) || ($2 = donate) {
+      if ($readini(PointsUpdated.ini,$chan,$nick) < $4) {
+        message $chan $user($nick) -> You do not have enough $points to use this command.
+      }
+      else {
+        set %donatedpoints $4
+        var %points $calc($readini(PointsUpdated.ini, n, $chan, $3) + %donatedpoints)
+        var %donator $calc($readini(PointsUpdated.ini, n, $chan, $nick) - %donatedpoints)
+        if (%donator < 0) { message $chan $user($nick) -> Sorry, you do not this many $points to give to $3 | return }
+        writeini -n PointsUpdated.ini $chan $3 %points
+        writeini -n PointsUpdated.ini $chan $nick %donator
+        if ($3 = $me) {
+          message $chan Thanks $user($nick) $+ ! I now have $readini(PointsUpdated.ini,$chan,$3) $points in total <3
+        }
+        else {
+          message $chan $3 -> $4 $points have been given to you by $user($nick) $+ ! <3
+        }
+      }
+    }
+    elseif ($2 = $null) {
+      if ($BotSetting(PointsOff) = $null) {
+        if ($access($nick) <= $pointslevel) {
+          message $chan $user($nick) -> You have $iif($readini(PointsUpdated.ini,$chan,$nick),$readini(PointsUpdated.ini,$chan,$nick),0) $points in total. 
+        }
+      }
+    }
+    elseif ($2 = top) {
+      if ($access($nick) <= 400) {
+        var %i = 1, %highestpoints = 0, %highestUser
+        while (%i <= $ini(PointsUpdated.ini, $chan, 0)) {
+          var %user = $ini(PointsUpdated.ini, $chan, %i), %points = $readini(PointsUpdated.ini, n, $chan, %user)
+          if (%points > %highestpoints) {
+            var %highestpoints = %points
+            var %highestUser = %user
+          }
+          inc %i
+        }
+        if (%highestpoints == 1) {
+          message $chan %highestUser is winning with %highestpoints $points earned recently!
+        }
+        elseif (%highestpoints > 1) {
+          message $chan %highestUser is winning with %highestpoints $points earned recently!
+        }
+        else {
+          message $chan No one has any $points earned recently!
+        }
+      }
+    }
+    elseif ($2 = lookup) {
+      if ($access($nick) <= 500) {
+        message $chan $user($nick) -> $3 has $iif($readini(PointsUpdated.ini,$chan,$3),$readini(PointsUpdated.ini,$chan,$3),0) $points in total.
+      }
+    }
+    elseif ($2 = add) || ($2 = remove) || ($2 = set) {
+      if ($access($nick) <= 500) {
+        if ($3 = group) && ($4 !isnum) {
+          if ($4 = all) {
+            set $+(%,p.,$chan) 1
+            while ($($+(%,p.,$chan),2) <= $nick(#,0,a)) {
+              set $+(%,puser.,$chan) $nick(#,$($+(%,p.,$chan),2),a)
+              writeini -n PointsUpdated.ini $chan $($+(%,puser.,$chan),2) $iif($2 = set,$5,$calc($readini(PointsUpdated.ini,$chan,$($+(%,puser.,$chan),2)) $iif($2 == add,+,-) $iif($5 isnum,$5,1)))
+              inc $+(%,p.,$chan)
+            }
+            message $chan $user($nick) -> All users have had $iif($2 != set,$5,their) $points $iif($2 = set,set to $5 $+ .,$iif($2 = add,added.,removed.))
+          }
+          elseif ($4 = mod) {
+            set $+(%,p.,$chan) 1
+            while ($($+(%,p.,$chan),2) <= $nick(#,0,o)) {
+              set $+(%,puser.,$chan) $nick(#,$($+(%,p.,$chan),2),o)
+              writeini -n PointsUpdated.ini $chan $($+(%,puser.,$chan),2) $iif($2 = set,$5,$calc($readini(PointsUpdated.ini,$chan,$($+(%,puser.,$chan),2)) $iif($2 == add,+,-) $iif($5 isnum,$5,1)))
+              inc $+(%,p.,$chan)
+            }
+            message $chan $user($nick) -> All moderators have had $iif($2 != set,$5,their) $points $iif($2 = set,set to $5 $+ .,$iif($2 = add,added.,removed.))
+          }
+          elseif ($4 = normal) {
+            set $+(%,p.,$chan) 1
+            while ($($+(%,p.,$chan),2) <= $nick(#,0,a,o)) {
+              set $+(%,puser.,$chan) $nick(#,$($+(%,p.,$chan),2),a,o)
+              writeini -n PointsUpdated.ini $chan $($+(%,puser.,$chan),2) $iif($2 = set,$5,$calc($readini(PointsUpdated.ini,$chan,$($+(%,puser.,$chan),2)) $iif($2 == add,+,-) $iif($5 isnum,$5,1)))
+              inc $+(%,p.,$chan)
+            }
+            message $chan $user($nick) -> All non-moderators have had $iif($2 != set,$5,their) $points $iif($2 = set,set to $5 $+ .,$iif($2 = add,added.,removed.))
+          }
+        }
+        elseif ($4 !isnum) {
+          set %w $0
+          set %q 3
+          if ($($+($,%w),2) isnum) {
+            while (%q < %w) {
+              writeini -n PointsUpdated.ini $chan $($+($,%q),2) $iif($2 = set,$($+($,%w),2),$calc($readini(PointsUpdated.ini,$chan,$($+($,%q),2)) $iif($2 == add,+,-) $($+($,%w),2)))
+              inc %q
+            }
+            message $chan The listed users have had $iif($2 != set,$($+($,%w),2),their) $points $iif($2 = set,set to $($+($,%w),2) $+ .,$iif($2 = add,added.,removed.))
+          }
+        }
+        else {
+          if ($0 < 4) { message # Insufficient parameters: Use ! $+ $points <add|remove> <user> [number] | return }
+          writeini -n PointsUpdated.ini $chan $3 $iif($2 = set,$4,$calc($readini(PointsUpdated.ini,$chan,$3) $iif($2 == add,+,-) $iif($4 isnum,$4,0)))
+          if ($3 = $me) && ($2 = add) {
+            message $chan Thanks $user($nick) $+ ! I now have $readini(PointsUpdated.ini,$chan,$3) $points in total <3
+          }
+          elseif ($3 = $me) && ($2 = remove) {
+            message $chan What did I do $user($nick) $+ ? I now have $readini(PointsUpdated.ini,$chan,$3) $points in total :(
+          }
+          elseif ($3 = $me) && ($2 = set) {
+            message $chan My $points have been set to $4 $+ .
+          }
+          elseif ($3 = set) {
+            message $chan $user($3) $+ 's $points have been set to $4 $+ .
+          }
+          else {
+            message $chan $user($3) now has $readini(PointsUpdated.ini,$chan,$3) $points in total.
+          }
+        }
+      }
+    }
+    elseif ($2 = reset) {
+      remini PointsUpdated.ini $chan
+      message $chan $user($nick) -> $Points have been reset.
+    }
+    elseif ($2 = on) {
+      if ($access <= 400) {
+        remini BotSettings.ini $chan NoPoints
+        message $chan $user($nick) -> $Points have been enabled.
+      }
+    }
+    elseif ($2 = off) {
+      if ($access <= 400) {
+        writeini -n BotSettings.ini $chan NoPoints True
+        message $chan $user($nick) -> $Points have been disabled.
+      }
+    }
+  }
+}
+
+alias pointslevel {
+  return $iif($readini(CommandLevels.ini,$chan,!points) != $null, $readini(CommandLevels.ini,$chan,!points), 800)
+}
+
+on *:text:!level *:#: {
+  if ($2 = !points) || ($2 = ! $+ $points) {
+    if ($access <= 400) {
+      if ($3 isnum 1-900) {
+        writeini -n CommandLevels.ini $chan !points $3
+        message $chan $user($nick) -> The command userlevel for ! $+ $points has been updated.
+      }
+      else {
+        message $chan $user($nick) -> You must enter a valid userlevel.
+      }
+    }
+  }
+}
+
+alias TimedPoints {
+  var %points $calc($readini(PointsUpdated.ini,$1,$2) + $3)
+  writeini -n PointsUpdated.ini $1 $2 %points
+}
+alias FollowAddPoints {
+  if ($BotSetting( FollowPoints) != $null) {
+    writeini -n PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + $BotSetting( FollowPointsNum)
+  }
+}
+alias SubAddPoints {
+  if ($BotSetting( SubPoints) != $null) {
+    writeini -n PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + $BotSetting( SubPointsNum)
+  }
+}
