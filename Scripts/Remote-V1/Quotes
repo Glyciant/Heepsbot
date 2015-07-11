@@ -1,0 +1,60 @@
+; Script Name: Quotes.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!quote add *:#: {
+  if ($access($nick) <= 400) {
+    write $+(Quotes-,$chan,.txt) $3- 
+    message $chan $user($nick) -> The quote was added.
+  }
+}
+
+on *:text:!quote remove *:#: {
+  if ($access($nick) <= 400) {
+    write -ds $+ $3 $($+(Quotes-,$chan,.txt),2) 
+    message $chan $user($nick) -> The quote was deleted.
+  }
+}
+
+on *:text:!quote clear:#: {
+  if ($access($nick) <= 400) {
+    remove $+(quotes-,$chan,.txt)
+    message $chan $user($nick) -> All quotes have been deleted.
+  }
+}
+
+on *:text:!quote *:#: {
+  if ($access($nick) <= $quotelevel) {
+    if ($2 isnum $+(1-,$lines($+(Quotes-,$chan,.txt)))) {
+      message $chan $read -l $+ $2 $+(Quotes-,$chan,.txt)
+    }
+    else {
+      if ($read -s $+ $2 $+(Quotes-,$chan,.txt) != $null) {
+        message $chan $2- $read -s $+ $2 $+(Quotes-,$chan,.txt)
+      }
+    }
+  }
+}
+
+on *:text:!quote:#: {
+  if ($access($nick) <= $quotelevel) {
+    message $chan $read($+(Quotes-,$chan,.txt))
+  }
+}
+
+alias quotelevel {
+  return $iif($readini(CommandLevels.ini,$chan,!quote) != $null, $readini(CommandLevels.ini,$chan,!quote), 800)
+}
+
+on *:text:!level !quote &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !quote $3
+      message $chan $user($nick) -> The command userlevel for !quote has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
