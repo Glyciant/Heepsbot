@@ -1,0 +1,260 @@
+; Script Name: ProtectASCII.ini
+; Type: Optional
+; Credits - ASCII Detector: http://www.mirc.org/mishbox/identifiers/asciipercent.htm
+; It is recommended that you do not modify this script.
+
+alias ascii.percent {
+  IF ($1 == $null) { RETURN } 
+  VAR %slen = $len($remove($1-,$chr(32))), %cn = 0, %fl = 0, %char
+  :loop
+  %char = $mid($remove($1-,$chr(32)),%cn,1)
+  IF ($asc(%char) > 126) { INC %fl 1 }
+  IF (%cn < %slen) { INC %cn | GOTO loop }
+  RETURN $round($calc((%fl / %slen) * 100),0)
+}
+
+on *:text:!set ascii*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Ascii ON
+      message $chan $user($nick) -> Ascii protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Ascii
+      message $chan $user($nick) -> Ascii protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan AsciiMessage $4-
+      message $chan $user($nick) -> Ascii message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan AsciiVisible
+        message $chan $user($nick) -> Ascii messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan AsciiVisible .
+        message $chan $user($nick) -> Ascii messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(AsciiLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan AsciiShort $4
+        message $chan $user($nick) -> The ascii short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(AsciiShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan AsciiLong $4
+        message $chan $user($nick) -> The ascii long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(AsciiMin) = $null) {
+          writeini -n BotSettings.ini $chan AsciiMax Purge
+          message $chan $user($nick) -> The ascii maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(AsciiMin) = Ban) || ($BotSetting(AsciiMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan AsciiMax
+          message $chan $user($nick) -> The ascii maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(AsciiMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan AsciiMax Long
+          message $chan $user($nick) -> The ascii maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan AsciiMax Ban
+        message $chan $user($nick) -> The ascii maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        remini BotSettings.ini $chan AsciiMin
+        message $chan $user($nick) -> The ascii minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(AsciiMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan AsciiMin Short
+          message $chan $user($nick) -> The ascii minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(AsciiMax) = Purge) || (($BotSetting(AsciiMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan AsciiMin Long
+          message $chan $user($nick) -> The ascii minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(AsciiMax) = Ban) {
+          writeini -n BotSettings.ini $chan AsciiMin Ban
+          message $chan $user($nick) -> The ascii minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan AsciiWarning
+        message $chan $user($nick) -> The ascii ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan AsciiWarning .
+        message $chan $user($nick) -> The ascii ban warning was disabled.
+      }
+    }
+    elseif ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan AsciiSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    if ($3 = allowed) {
+      if (($4 !isnum) || ($4 <= 100)) {
+        writeini -n BotSettings.ini $chan AllowedAscii $4
+        message $chan $user($nick) -> The allowed ascii percentage was updated.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a number less than, or equal to, 100.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Ascii Protection is currently $iif($BotSetting(Ascii) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!forget ascii *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,Asciiban.,$chan,.,$3)
+    unset $+(%,Asciibanwarning.,$chan,.,$3)
+    unset $+(%,Asciishorttimeout.,$chan,.,$3)
+    unset $+(%,Asciilongtimeout.,$chan,.,$3)
+    unset $+(%,Asciipurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for ascii.
+  }
+}
+
+on *:text:*:#:{
+  if ($BotSetting(Ascii) != $null) {
+    if ($ascii.percent($1-) > $iif($BotSetting(AllowedAscii) != $null,$BotSetting(AllowedAscii),50)) {
+      if ($access($nick) <= $iif($BotSetting(AsciiSafe) != $null,$BotSetting(AsciiSafe),600)) { return }
+      if ($BotSetting(AsciiWarning) = $null) && ($($+(%,Asciilongtimeout.,$chan,.,$nick),2)) {
+        Asciiban $nick
+      }
+      elseif ($($+(%,Asciilongtimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(AsciiMax) = Long) {
+          Asciilong $nick
+        }
+        elseif ($BotSetting(AsciiWarning) = $null) {
+          Asciiwarning $nick
+        }
+        else {
+          Asciiban $nick
+        }
+      }
+      elseif ($($+(%,Asciishorttimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(AsciiMax) = $null) {
+          Asciishort $nick
+        }
+        else {
+          Asciilong $nick
+        }
+      }
+      elseif ($($+(%,Asciipurge.,$chan,.,$nick),2)) {
+        if ($BotSetting(AsciiMax) = Purge) {
+          Asciipurge $nick
+        }
+        else {
+          Asciishort $nick
+        }
+      }
+      else {
+        if ($BotSetting(AsciiMin) = Ban) {
+          Asciiban $nick
+        }
+        elseif ($BotSetting(AsciiMin) = Long) {
+          Asciilong $nick
+        }
+        elseif ($BotSetting(AsciiMin) = Short) {
+          Asciishort $nick
+        }
+        else {
+          Asciipurge $nick
+        }
+      }
+    }
+  }
+}
+
+alias Asciipurge {
+  set -u3600 $+(%,Asciipurge.,$chan,.,$nick) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(AsciiVisible) = $null) {
+    message $chan $iif($BotSetting(AsciiMessage) != $null,$BotSetting(AsciiMessage),Please don't use ASCII characters!) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias Asciishort {
+  set -u3600 $+(%,Asciishorttimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(AsciiShort) != $null,$BotSetting(AsciiShort),600)
+  if ($BotSetting(AsciiVisible) = $null) {
+    message $chan $iif($BotSetting(AsciiMessage) != $null,$BotSetting(AsciiMessage),Please don't use ASCII characters!) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias Asciilong {
+  set -u3600 $+(%,Asciilongtimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(AsciiLong) != $null,$BotSetting(AsciiLong),2880)
+  if ($BotSetting(AsciiVisible) = $null) {
+    message $chan $iif($BotSetting(AsciiMessage) != $null,$BotSetting(AsciiMessage),Please don't use ASCII characters!) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias Asciiwarning {
+  set -u3600 $+(%,Asciibanwarning.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(AsciiLong) != $null,$BotSetting(AsciiLong),2880)
+  if ($BotSetting(AsciiVisible) = $null) {
+    message $chan $iif($BotSetting(AsciiMessage) != $null,$BotSetting(AsciiMessage),Please don't use ASCII characters!) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias Asciiban {
+  set -u3600 $+(%,Asciiban.,$chan,.,$nick) ON
+  message $chan /ban $1
+  if ($BotSetting(AsciiVisible) = $null) {
+    message $chan $iif($BotSetting(AsciiMessage) != $null,$BotSetting(AsciiMessage),Please don't use ASCII characters!) ( $+ $user($1) $+ ) (Ban)
+  }
+}
