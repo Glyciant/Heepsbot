@@ -1,0 +1,206 @@
+; Script Name: Hosting.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!set autohost *:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = mode) {
+      if ($4 = request) {
+        writeini -n BotSettings.ini $chan AutoHostMode Request
+        message $chan $user($nick) -> The Auto-Host mode has been updated.
+      }
+      if ($4 = list) {
+        remini BotSettings.ini $chan AutoHostMode
+        message $chan $user($nick) -> The Auto-Host mode has been updated.
+      }
+    }
+    if ($3 = reset) {
+      if ($4 = automatic) {
+        remini BotSettings.ini $chan AutoHostReset
+        message $chan $user($nick) -> The Auto-Host request list will now be automatically reset.
+      }
+      if ($4 = manual) {
+        writeini -n BotSettings.ini $chan AutoHostReset Manual
+        message $chan $user($nick) -> The Auto-Host request list will now not be automatically reset.
+      }
+    }
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan AutoHost On
+      message $chan $user($nick) -> The Auto-Host feature has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan AutoHost
+      message $chan $user($nick) -> The Auto-Host feature has been disabled.
+    }
+  }
+}
+
+on *:text:!request *:#: {
+  if ($2 = reset) {
+    if ($access($nick) <= 400) {
+      remini HostRequests.ini $chan
+      message $chan $user($nick) -> The host request list has been cleared.
+    }
+  }
+  elseif ($2 = find) {
+    if ($access($nick) <= 500) {
+      while (%hostfind <= $ini(HostRequests.ini,$chan,0)) {
+        if ($readini(HostRequests.ini,$chan,$ini(HostRequests.ini,$chan,%hostfind)) = $3) {
+          set %hostfindusers $addtok(%hostfindusers,$readini(HostRequests.ini,$chan,$ini(HostRequests.ini,$chan,%hostfind)),35)
+        }
+        inc %hostfind
+      }
+      message $chan $user($nick) -> $iif(%hostfindusers != $null, The following users requested $3 $+ : %hostfindusers, Nobody requested $3 $+ .)
+      unset %hostfind
+      unset %hostfindusers
+    }
+  }
+  elseif ($2 = user) {
+    if ($access($nick) <= 500) {
+      message $chan $user($nick) -> $3 $iif($readini(HostRequests.ini,$chan,$3) != $null, requested $readini(HostRequests.ini,$chan,$3), has not requested a stream.)
+    }
+  }
+  else {
+    if ($access($nick) <= $requestlevel) {
+      if ($BotSetting(AutoHostMode) != $null) {
+        if ($readini(HostRequests.ini,$chan,$nick) = $null) {
+          writeini -n HostRequests.ini $chan $nick $2
+          message $chan $2 has been added to the hosting list!
+        }
+      }
+    }
+  }
+}
+
+on *:text:!hostchannel *:#: {
+  if ($access($nick) <= 400) {
+    if ($2 = add) {
+      if ($readini(HostChannels.ini,$chan,$3) = $null) {
+        writeini -n HostChannels.ini $chan $3 .
+        message $chan $user($nick) -> $3 has been added to the list of channels that will be hosted.
+      }
+      else {
+        message $chan $user($nick) -> $3 is already on the list of channels that will be hosted.
+      }
+    }
+    if ($2 = remove) {
+      if ($readini(HostChannels.ini,$chan,$3) != $null) {
+        remini HostChannels.ini $chan $3
+        message $chan $user($nick) -> $3 has been removed from the list of channels that will be hosted.
+      }
+      else {
+        message $chan $user($nick) -> $3 is not on the list of channels that will be hosted.
+      }
+    }
+  }
+}
+
+alias requestlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!request) != $null, $readini(CommandLevels.ini,$chan,!request), 800)
+}
+
+on *:text:!level !request &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !request $3
+      message $chan $user($nick) -> The command userlevel for !request has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+alias HostChange {
+  if ($BotSetting(AutoHostMode,$1) != $null) {
+    HostRequestChange $2 $1
+  }
+  else {
+    HostListChange $2 $1
+  }
+}
+
+alias HostRequestChange {
+  message $1 Attempting to change the hosted channel...
+  :HostRequestChangeRestart
+  if ($ini(HostRequests.ini,$1,0) = 0) || ($ini(HostRequests.ini,$1,0) = $null) {
+    message $1 Could not change the hosted channel. (No Online Channels to Select)
+  }
+  else { 
+    set %autohostnumber $rand(1,$ini(HostRequests.ini,$1,0))
+    set %autohostuser $ini(HostRequests.ini,$1,%autohostnumber)
+    set %autohostchannel $readini(HostRequests.ini,$1,%autohostuser)
+    remini HostRequests.ini $1 %autohostuser
+    if ($HostLiveCheck(%autohostchannel) = Online) {
+      if (%autohostchannel = $BotSetting(HostChannel,$1)) {
+        message $1 $capital(%autohostchannel) has been chosen to be hosted again! 
+      }
+      else {
+        remini HostRequests.ini $1 %autohostuser
+        message $1 /unhost
+        message $1 /host %autohostchannel
+        message $1 The hosted channel has been changed to %autohostchannel - Suggested by %autohostuser $+ .
+        if ($BotSetting(AutoHostReset,$1) = $null) {
+          remini HostRequests.ini $1
+        }
+      }
+    }
+    else {
+      goto HostRequestChangeRestart
+    }
+    unset %autohostnumber
+    unset %autohostuser
+    unset %autohostchannel
+    writeini -n BotSettings.ini $1 HostChannel %autohostchannel
+  }
+}
+
+alias HostListChange {
+  message $1 Attempting to change the hosted channel...
+  set %autohosti 1
+  :HostRequestChangeRestart
+  while (%autohosti <= $ini(HostChannels.ini,$1,0)) {
+    set %autohostchannel $ini(HostChannels.ini,$1,%autohosti)
+
+    if ($HostLiveCheck(%autohostchannel) = Online) {
+      if (%autohostchannel = $BotSetting(HostChannel,$1)) {
+        message $1 $capital(%autohostchannel) has been chosen to be hosted again! 
+      }
+      else {
+        message $1 /unhost
+        message $1 /host %autohostchannel
+        message $1 The hosted channel has been changed to %autohostchannel $+ .
+        writeini -n BotSettings.ini $1 HostChannel %autohostchannel
+      }
+      remini HostChannels.ini $1 %autohostchannel
+      writeini -n HostChannels.ini $1 %autohostchannel .
+      set %autohosti $calc($ini(HostChannels.ini,$1,0) + 1)
+    }
+    else {
+      inc %autohosti
+    }
+  }
+  unset %autohosti
+  unset %autohostchannel
+}
+
+alias HostLiveCheck {
+  if (!$1) { return }
+  set %hostlivelink https://api.twitch.tv/kraken/streams/ $+ $1
+  set %hostliveticks twcf_ $+ $ticks
+  JSONOpen -ud %hostliveticks %hostlivelink
+  set %hostlivecheck $json(%hostliveticks,stream) 
+  :end
+  if (%hostlivecheck = $null) {
+    return Offline
+  }
+  else {
+    return Online
+  }
+  :end2
+  JSONClose %hostliveticks
+  unset %hostlivecheck
+  unset %hostlivelink
+  unset %hostliveticks
+}
