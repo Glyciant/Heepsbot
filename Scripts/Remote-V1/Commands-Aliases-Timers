@@ -1,0 +1,242 @@
+; Script Name: Commands.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!command add *:#: {
+  if ($access($nick) <= 400) {
+    if ($0 <= 3) {
+      message $chan $user($nick) -> Insufficient Parameters! Usage: !command add <command name> <command response>
+    }
+    elseif ($readini(CustomCommands.ini, $chan, $3) = $null) { 
+      writeini -n CustomCommands.ini $chan $3 $4-
+      set $+(%,customcommands.,$chan) $addtok($($+(%,customcommands.,$chan),2),$3,32)
+      message $chan $user($nick) -> Command $3 has been created.
+    }
+    else {
+      message $chan $user($nick) -> $3 is already a command.
+    }
+  }
+}
+
+on *:text:!command setting *:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(CustomCommands.ini,$chan,$4) != $null) {
+      if ($3 = level) {
+        writeini -n CommandSettings.ini $+($chan,.,$4) Level $5
+        message $chan $user($nick) -> Users now need a userlevel of $5 or better to use $4 $+ .
+      }
+      if ($3 = cost) {
+        writeini -n CommandSettings.ini $+($chan,.,$4) Cost $5
+        message $chan $user($nick) -> Users will now have to pay $5 $points to use $4 $+ .
+      }
+      if ($3 = add) {
+        writeini -n CommandSettings.ini $+($chan,.,$4) Add $5
+        message $chan $user($nick) -> Users will now earn $5 $points when they use $4 $+ .
+      }
+      if ($3 = timeout) {
+        writeini -n CommandSettings.ini $+($chan,.,$4) Timeout $5
+        message $chan $user($nick) -> Users will now be timed out for $5 seconds when they use $4 $+ .
+      }
+    }
+    else {
+      message $chan $user($nick) -> Command $4 does not exist.
+    }
+  }
+}
+
+on *:text:!command remove &:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(CustomCommands.ini,$chan,$3) != $null) {
+      remini CustomCommands.ini $chan $3
+      set $+(%,customcommands.,$chan) $remtok($($+(%,customcommands.,$chan),2),$3,32)
+      message $chan $user($nick) -> Command $3 has been deleted.
+    }
+    else {
+      message $chan $user($nick) -> Command $3 does not exist.
+    }
+  }
+}
+
+on *:text:!command edit *:#: {
+  if ($access($nick) <= 400) {
+    if ($0 <= 3) {
+      message $chan $user($nick) -> Insufficiient Parameters! Usage: !command edit <command name> <command response>
+    }
+    elseif ($readini(CustomCommands.ini, $chan, $3) = $null) { 
+      message $chan $user($nick) -> $3 is not an existing command.
+    }
+    else {
+      writeini -n CustomCommands.ini $chan $3 $4=
+      message $chan $user($nick) -> Command $3 has been updated.
+    }
+  }
+}
+
+on *:text:!command list:#: {
+  if ($access($nick) <= 500) {
+    message $chan Custom Commands: $($+(%,customcommands.,$chan),2)
+  }
+}
+
+on *:text:!command rename *:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(CustomCommands.ini, $chan, $3) != $null) {
+      if ($readini(CustomCommands.ini, $chan, $4) = $null) {
+        writeini -n CustomCommands.ini $chan $4 $readini(CustomCommands.ini,$chan,$3)
+        remini CustomCommands.ini $chan $3
+        set $+(%,customcommands.,$chan) $remtok($($+(%,customcommands.,$chan),2),$3,32)
+        set $+(%,customcommands.,$chan) $addtok($($+(%,customcommands.,$chan),2),$4,32)
+        if ($readini(CommandSettings.ini,$+($chan,.,$3),Level) != $null) {
+          writeini -n CommandSettings.ini $+($chan,.,$4) Level $readini(CommandSettings.ini,$+($chan,.,$3),Level)
+        }
+        if ($readini(CommandSettings.ini,$+($chan,.,$3),Cost) != $null) {
+          writeini -n CommandSettings.ini $+($chan,.,$4) Cost $readini(CommandSettings.ini,$+($chan,.,$3),Cost)
+        }
+        if ($readini(CommandSettings.ini,$+($chan,.,$3),Add) != $null) {
+          writeini -n CommandSettings.ini $+($chan,.,$4) Add $readini(CommandSettings.ini,$+($chan,.,$3),Add)
+        }
+        if ($readini(CommandSettings.ini,$+($chan,.,$3),Timeout) != $null) {
+          writeini -n CommandSettings.ini $+($chan,.,$4) Timeout $readini(CommandSettings.ini,$+($chan,.,$3),Timeout)
+        }
+        if ($readini(CustomCommandsCount.ini,$chan,$3) != $null) {
+          writeini -n CustomCommandsCount.ini $chan $4 $readini(CustomCommandsCount.ini,$chan,$3)
+          remini CustomCommandsCount.ini $chan $3
+        }
+        remini CommandSettings.ini $+($chan,.,$3)
+        message $chan $user($nick) -> Command $3 has been renamed to $4 $+ .
+      }
+      else {
+        message $chan $user($nick) -> Command $4 already exists.
+      }
+    }
+    else {
+      message $chan $user($nick) -> Command $3 does not exist.
+    }
+  }
+}
+
+on *:text:!command count *:#: {
+  if ($access($nick) <= 500) {
+    if ($3 = set) {
+      if ($readini(CustomCommands.ini, $chan, $4) != $null) {
+        if ($5 isnum) {
+          writeini -n CustomCommandsCount.ini $chan $4 $5
+          message $chan $user($nick) -> Command Count for $4 set to $5 $+ .
+        }
+        else {
+          message $chan $user($nick) -> You must enter a number.
+        }
+      }
+      else {
+        message $chan $user($nick) -> Command $4 does not exist.
+      }
+    }
+    else {
+      if ($readini(CustomCommands.ini, $chan, $3) = $null) {
+        message $chan $user($nick) -> Command $3 does not exist.
+      }
+      else {
+        message $chan $user($nick) -> Command $3 has been used $iif($readini(CustomCommandsCount.ini,$chan,$3) != $null, $readini(CustomCommandsCount.ini,$chan,$3), 0) times.
+      }
+    }
+  }
+}
+
+on *:text:!timer add *:#: {
+  if ($access($nick) <= 400) {
+    message $chan $user($nick) -> Insufficient Parameters! Usage: !timer add <commandname> <freqency>
+  }
+  elseif ($readini(CustomCommands.ini, $chan, $3) = $null) { 
+    message $chan $user($nick) -> Command $3 does not exist.
+  }
+  elseif ($($+(%,timer.,$3,.,$chan),2)) {
+    message $chan $user($nick) -> $3 is already a timer.
+  }
+  else {
+    set $+(%,timer.,$3,.,$chan) on
+    $+(.timermessage.,$3,.,$chan 0 $4 TimerRun $3 $chan)
+    message $chan $user($nick) -> Command $3 will now be shown every $4 seconds.
+  }
+}
+
+on *:text:!timer remove *:#: {
+  if ($access($nick) <= 400) {
+    if ($($+(%,timer.,$3,.,$chan),2)) {
+      unset $+(%,timer.,$3,.,$chan)
+      $+(.timermessage.,$3,.,$chan off)
+      message $chan $user($nick) -> Timer $3 has been deleted.
+    }
+    else {
+      message $chan $user($nick) -> Timer $3 does not exist.
+    }
+  }
+}
+
+alias TimerRun {
+  writeini -n timercount.ini $2 $1 $calc($readini(timercount.ini, $2, $1) + 1)
+  message $2 Message $replace($readini(CustomCommands.ini, $2, $1),^CHAN^,$+(%,owner.,$2),^COUNT^,$readini(timercount.ini, $2, $1))
+}
+
+on *:text:!alias add *:#: {
+  if ($access($nick) <= 400) {
+    if (!$4) {
+      message $chan $user($nick) -> Insufficient Parameters! Usage: !alias add <alias name> <command name>
+    }
+    elseif ($readini(commandaliases.ini, $chan, $3) = $null) {
+      writeini -n commandaliases.ini $chan $3 $4
+      set $+(%,commandaliases.,$chan) $addtok($($+(%,commandaliases.,$chan),2),$3,32)
+      message $chan Alias $3 has been created and will show command $4 $+ .
+    }
+    else {
+      message $chan $user($nick) -> Alias $3 already exists.
+    }
+  }
+}
+
+on *:text:!alias remove &:#: {
+  if ($access($nick) <= 400) {
+    remini commandaliases.ini $chan $3
+    set $+(%,commandaliases.,$chan) $remtok($($+(%,commandaliases.,$chan),2),$3,1,32)
+    message $chan $user($nick) -> Alias $3 has been deleted.
+  }
+}
+
+on *:text:!alias list:#: {
+  if ($access($nick) <= 500) {
+    message $chan Command Aliases: $($+(%,commandaliases.,$chan),2)
+  }
+}
+
+on *:text:*:#: {
+  if ($readini(CustomCommands.ini, $chan, $1) != $null) { CommandRun $chan $nick $1 $2 }
+  elseif ($readini(commandaliases.ini, $chan, $1) != $null) { CommandRun $chan $nick $readini(commandaliases.ini, $chan, $1) $2 }
+}
+
+; /CommandRun Channel User Command ToUser
+
+alias CommandRun {
+  if ($access($nick) <= $commandlevel($3)) {
+    if ($readini(Points.ini,$chan,$nick) < $iif($readini(CommandSettings.ini, $+($chan,.,$1) Level) != $null,$readini(CommandSettings.ini, $+($chan,.,$1) Level),0)) {
+      message $chan $user($nick) -> You do not have enough $points to use this command.
+    }
+    if ($readini(CommandSettings.ini, $+($1,.,$3) Add) != $null) { writeini -n PointsUpdated.ini $1 $2 $calc($readini(PointsUpdated.ini,$1,$2) + $readini(CommandSettings.ini, $+($1,.,$3) Add)) }
+    if ($readini(CommandSettings.ini, $+($1,.,$3) Cost) != $null) { writeini -n PointsUpdated.ini $1 $2 $calc($readini(PointsUpdated.ini,$1,$2) - $readini(CommandSettings.ini, $+($1,.,$3) Cost)) }
+    if ($access($nick) > 500) {
+      if ($readini(CommandSettings.ini, $+($1,.,$3) Timeout) != $null) { message $1 /timeout $2 $readini(CommandSettings.ini, $+($1,.,$3) Timeout) }
+    }
+    else {
+      writeini -n CustomCommandsCount.ini $1 $3 $calc($readini(customcommandscount.ini, $1, $3) + 1)
+      if ($4) {
+        message $1 $replace($readini(CustomCommands.ini, $1, $3),^USER^,$user($2),^NICK^,$2,^TOUSER^,$4,^CHAN^,$+(%,owner.,$1),^COUNT^,$readini(customcommandscount.ini, $1, $3),^SUB^,$($+(%,lastsub.,$1),2)),^FOLLOWER^,$($+(%,lastfollower.,$1),2)))
+      }
+      else {
+        message $1 $replace($readini(CustomCommands.ini, $1, $3),^USER^,$user($2),^NICK^,$2,^TOUSER^,$2,^CHAN^,$+(%,owner.,$1),^COUNT^,$readini(customcommandscount.ini, $1, $3),^SUB^,$($+(%,lastsub.,$1),2)),^FOLLOWER^,$($+(%,lastfollower.,$1),2)))
+      }
+    }
+  }
+}
+
+alias commandlevel {
+  return $iif($readini(CommandSettings.ini, $+($chan,.,$1) Level) != $null,$readini(CommandSettings.ini, $+($chan,.,$1) Level),800)
+}
