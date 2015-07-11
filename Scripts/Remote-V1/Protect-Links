@@ -1,0 +1,259 @@
+; Script Name: ProtectLinks.ini
+; Type: Optional
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:text:!set links*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Links ON
+      message $chan $user($nick) -> Links protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Links
+      message $chan $user($nick) -> Links protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan LinksMessage $4-
+      message $chan $user($nick) -> Links message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan LinksVisible
+        message $chan $user($nick) -> Links messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan LinksVisible .
+        message $chan $user($nick) -> Links messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(LinksLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan LinksShort $4
+        message $chan $user($nick) -> The links short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(LinksShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan LinksLong $4
+        message $chan $user($nick) -> The links long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(LinksMin) = $null) {
+          writeini -n BotSettings.ini $chan LinksMax Purge
+          message $chan $user($nick) -> The links maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(LinksMin) = Ban) || ($BotSetting(LinksMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan LinksMax
+          message $chan $user($nick) -> The links maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(LinksMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan LinksMax Long
+          message $chan $user($nick) -> The links maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan LinksMax Ban
+        message $chan $user($nick) -> The links maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        remini BotSettings.ini $chan LinksMin
+        message $chan $user($nick) -> The links minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(LinksMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan LinksMin Short
+          message $chan $user($nick) -> The links minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(LinksMax) = Purge) || (($BotSetting(LinksMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan LinksMin Long
+          message $chan $user($nick) -> The links minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(LinksMax) = Ban) {
+          writeini -n BotSettings.ini $chan LinksMin Ban
+          message $chan $user($nick) -> The links minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan LinksWarning
+        message $chan $user($nick) -> The links ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan LinksWarning .
+        message $chan $user($nick) -> The links ban warning was disabled.
+      }
+    }
+    elseif ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan LinksSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Links Protection is currently $iif($BotSetting(Links) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!permit *:#: {
+  if ($access($nick) <= 500) {
+    if ($BotSetting(Links) != $null) {
+      if ($2) {
+        set -u120 $+(%,permit.,$chan,.,$2) On
+        message $chan $user($nick) -> $2 has 120 seconds to post one link.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a user to permit.
+      }
+    }
+    else {
+      message $chan $user($nick) -> Links protection is disabled - users do not need to be permitted.
+    }
+  }
+}
+
+on *:text:!forget links *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,linksban.,$chan,.,$3)
+    unset $+(%,linksbanwarning.,$chan,.,$3)
+    unset $+(%,linksshorttimeout.,$chan,.,$3)
+    unset $+(%,linkslongtimeout.,$chan,.,$3)
+    unset $+(%,linkspurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for links.
+  }
+}
+
+on *:text:*:#:{
+  if ((.com isin $1-) || (.co isin $1-) || (.uk isin $1-) || (.edu isin $1-) || (.gov isin $1-) || (.mil isin $1-) || (.net isin $1-) || (.org isin $1-) || (.biz isin $1-) || (.me isin $1-) || (.info isin $1-) || (.de isin $1-) || (.fr isin $1-) || (.name isin $1-) || (.us isin $1-) || (.ca isin $1-) || (.su isin $1-) || (.pt isin $1-) || (.tv isin $1-) || (.ru isin $1-) || (.cl isin $1-) || (.sh isin $1-) || (.scr isin $1-) || (.ar isin $1) || (.ac isin $1-)) {
+    if ($BotSetting(Links) != $null) {
+      if ($access($nick) <= $iif($BotSetting(LinksSafe) != $null,$BotSetting(LinksSafe),600)) { return }
+      if ($($+(%,permit.,$chan,.,$nick),2)) { unset $+(%,permit.,$chan,.,$nick) | return }
+      if ($BotSetting(LinksWarning) = $null) && ($($+(%,linkslongtimeout.,$chan,.,$nick),2)) {
+        linksban $nick
+      }
+      elseif ($($+(%,linkslongtimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(LinksMax) = Long) {
+          linkslong $nick
+        }
+        elseif ($BotSetting(LinksWarning) = $null) {
+          linkswarning $nick
+        }
+        else {
+          linksban $nick
+        }
+      }
+      elseif ($($+(%,linksshorttimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(LinksMax) = $null) {
+          linksshort $nick
+        }
+        else {
+          linkslong $nick
+        }
+      }
+      elseif ($($+(%,linkspurge.,$chan,.,$nick),2)) {
+        if ($BotSetting(LinksMax) = Purge) {
+          linkspurge $nick
+        }
+        else {
+          linksshort $nick
+        }
+      }
+      else {
+        if ($BotSetting(LinksMin) = Ban) {
+          linksban $nick
+        }
+        elseif ($BotSetting(LinksMin) = Long) {
+          linkslong $nick
+        }
+        elseif ($BotSetting(LinksMin) = Short) {
+          linksshort $nick
+        }
+        else {
+          linkspurge $nick
+        }
+      }
+    }
+  }
+}
+
+alias linkspurge {
+  set -u3600 $+(%,linkspurge.,$chan,.,$nick) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(LinksVisible) = $null) {
+    message $chan $iif($BotSetting(LinksMessage) != $null,$BotSetting(LinksMessage),Links must be permitted!) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias linksshort {
+  set -u3600 $+(%,linksshorttimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(LinksShort) != $null,$BotSetting(LinksShort),600)
+  if ($BotSetting(LinksVisible) = $null) {
+    message $chan $iif($BotSetting(LinksMessage) != $null,$BotSetting(LinksMessage),Links must be permitted!) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias linkslong {
+  set -u3600 $+(%,linkslongtimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(LinksLong) != $null,$BotSetting(LinksLong),2880)
+  if ($BotSetting(LinksVisible) = $null) {
+    message $chan $iif($BotSetting(LinksMessage) != $null,$BotSetting(LinksMessage),Links must be permitted!) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias linkswarning {
+  set -u3600 $+(%,linksbanwarning.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(LinksLong) != $null,$BotSetting(LinksLong),2880)
+  if ($BotSetting(LinksVisible) = $null) {
+    message $chan $iif($BotSetting(LinksMessage) != $null,$BotSetting(LinksMessage),Links must be permitted!) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias linksban {
+  set -u3600 $+(%,linksban.,$chan,.,$nick) ON
+  message $chan /ban $1
+  if ($BotSetting(LinksVisible) = $null) {
+    message $chan $iif($BotSetting(LinksMessage) != $null,$BotSetting(LinksMessage),Links must be permitted!) ( $+ $user($1) $+ ) (Ban)
+  }
+}
