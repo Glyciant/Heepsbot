@@ -1,0 +1,828 @@
+; Script Name: Core.ini
+; Type: Required
+; Credits - JSON Parser: http://hawkee.com/snippet/10194/
+; It is recommended that you do not modify this script.
+
+alias master {
+  if ($1) {
+    set %master $1
+    echo Bot Master Set To: $capital(%master)
+  }
+  else {
+    echo Current Bot Master: $capital(%master)
+  }
+}
+
+alias user {
+  if ($readini(Usernames.ini, $chan, $1) != $null) {
+    return $readini(Usernames.ini, $chan, $1)
+  }
+  elseif ($readini(Usernames.ini, Global, $1) != $null) {
+    return $readini(Usernames.ini, Global, $1)
+  }
+  else {
+    return $upper($left($1,1)) $+ $mid($1,2-)
+  }
+}
+
+alias capital return $upper($left($1,1)) $+ $mid($1,2-)
+
+on *:text:!test:#: {
+  if ($access($nick) <= $testlevel) {
+    message $chan Test Reply Sent to $nick in $chan at $date $+ , $time $+ . 
+  }
+}
+
+alias testlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!test) != $null, $readini(CommandLevels.ini,$chan,!test), 800)
+}
+
+on *:text:!level !test &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 300-900) {
+      writeini -n CommandLevels.ini $chan !test $3
+      message $chan $user($nick) -> The command userlevel for !test has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+alias BotSetting {
+  if ($readini(BotSettings.ini,$chan,Preset) = $null) {
+    return $readini(BotSettings.ini, $iif($2,$2,$chan), $1)
+  }
+  else {
+    return $readini(Presets.ini, $+($readini(BotSettings.ini, $chan, Preset),.,Settings), $1)
+  }
+}
+
+alias CommandLevel {
+  if ($readini(BotSettings.ini,$chan,Preset) = $null) {
+    return $readini(CommandLevels.ini, $chan, $1)
+  }
+  else {
+    return $readini(Presets.ini, $+($readini(CommandLevels.ini, $chan, Preset),.,CommandLevels), $1)
+  }
+}
+
+on *:text:!preset*:#: {
+  if ($access($nick) <= 300) {
+    if ($2 = off) {
+      remini BotSettings.ini $chan Preset
+      message $chan $user($nick) -> The preset has been removed.
+    }
+    elseif ($2) {
+      if ($readini(Presets.ini,$+($2,.,Settings),Name) != $null) {
+        writeini -n BotSettings.ini $chan Preset $capital($2)
+        message $chan $user($nick) -> The bot settings preset has been updated.
+      }
+      else {
+        message $chan $user($nick) -> The preset you have chosen does not exist or is not loaded.
+      }
+    }
+    else {
+      message $chan $iif($readini(BotSettings.ini,$chan,Preset) != $null, This channel is currently using the $readini(BotSettings.ini,$chan,Preset) preset.,This channel is not currently using a preset.)
+    }
+  }
+}
+
+on *:text:!shoutout:#: {
+  if ($access($nick) <= $shoutoutlevel) {
+    if ($BotSetting(Shoutout) != $null) {
+      message $chan Shoutout to $BotSetting(Shoutout) $+ ! Check out their channel at twitch.tv/ $+ $BotSetting(Shoutout)
+    }
+    else {
+      message $chan $user($nick) -> A channel to create a shoutout for must be chosen before you use this command.
+    }
+  }
+}
+
+on *:text:!set shoutout &:#: {
+  if ($access($nick) <= 400) {
+    writeini -n BotSettings.ini $chan Shoutout $3
+    message $chan $user($nick) -> The shoutout user and link have been updated.
+  }
+}
+
+alias shoutoutlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!shoutout) != $null, $readini(CommandLevels.ini,$chan,!shoutout), 800)
+}
+
+on *:text:!level !shoutout &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !shoutout $3
+      message $chan $user($nick) -> The command userlevel for !shoutout has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+on *:text:!highlight *:#: {
+  set $+(%,highlight.,$chan) $2-
+  set %target $iif($2,$2,$mid(#,2-))
+  set %channel $chan
+  highlight
+  message $chan $user($nick) -> Highlight notice created.
+}
+
+;Uptime sockets from http://forums.mirc.com/ubbthreads.php/ubb/showflat/Number/247767/Searchpage/1/Main/46779/Words/%21uptime/Search/true/Re:_Little_socket_script_-_pro#Post247767
+
+alias highlight {
+  sockclose highlight
+  sockopen highlight nightdev.com 80
+}
+
+on *:sockopen:highlight:{
+  if ($sockerr) { sockclose $sockname | halt }
+  sockwrite -n $sockname GET /hosted/uptime.php?channel= $+ %target HTTP/1.1
+  sockwrite -n $sockname Host: www.nightdev.com 
+  sockwrite -n $sockname $crlf
+}
+
+on *:sockread:highlight:{
+  if ($sockerr) { sockclose $sockname | halt }
+  var %data
+  sockread %data
+  tokenize 32 %data
+  if ($1 isnum) && ($2) { writeini -n Highlights.ini %channel $1- $($+(%,highlight.,%channel),2)
+  unset $+(%,highlight.,%channel) }
+  elseif (%data == The channel is not live.) { writeini -n Highlights.ini %channel Offline $($+(%,highlight.,%channel),2)
+  unset $+(%,highlight.,%channel) }
+}
+
+on *:sockclose:highlight:{ 
+  unset %channel
+  unset %target
+}
+
+on *:text:!random*:#: {
+  if ($access($nick) <= 500) {
+    if ($0 <= 2) {
+      message $chan $user($nick) -> You must choose at least 2 things to randomize.
+      return
+    }
+    set %j $0
+    set %i 2
+    while (%i <= %j) {
+      write $+(random-,$chan,.txt) $($+($,%i),2)
+      inc %i
+    }
+    message $chan $user($nick) -> I choose $read($+(random-,$chan,.txt), n)
+    remove $+(random-,$chan,.txt)
+    unset %i
+    unset %j
+  }
+}
+
+alias randomlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!random) != $null, $readini(CommandLevels.ini,$chan,!random), 800)
+}
+
+on *:text:!level !random &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !random $3
+      message $chan $user($nick) -> The command userlevel for !random has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+on *:text:!lurk:#: {
+  if ($access($nick) <= $lurklevel) {
+    if ($BotSetting(Lurk) = $null) {
+      message $chan $iif($BotSetting(LurkOn) != $null,$replace($BotSetting(LurkOff),^USER^,$user($nick),^NICK^,$capital($nick),^CHAN,$owner),$user($nick) is now lurking.)
+    }
+  }
+}
+
+on *:text:!unlurk:#: {
+  if ($access($nick) <= $lurklevel) {
+    if ($BotSetting(Lurk) = $null) {
+      message $chan $iif($BotSetting(LurkOff) != $null,$replace($BotSetting(LurkOff),^USER^,$user($nick),^NICK^,$capital($nick),^CHAN,$owner),$user($nick) is no longer lurking.)
+    }
+  }
+}
+
+alias lurklevel {
+  return $iif($readini(CommandLevels.ini,$chan,!lurk) != $null, $readini(CommandLevels.ini,$chan,!lurk), 800)
+}
+
+on *:text:!level !lurk &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !lurk $3
+      message $chan $user($nick) -> The command userlevel for !lurk has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+on *:text:!set lurk &:#: {
+  if ($access($nick) <= 400) {
+    if ($2 = on) {
+      remini BotSettings.ini $chan Lurk 
+      message $chan $user($nick) -> The lurk command was enabled.
+    }
+    if ($2 = off) {
+      writeini -n BotSettings.ini $chan Lurk .
+      message $chan $user($nick) -> The lurk command was disabled.
+    }
+    if ($2 = onmessage) {
+      writeini -n BotSettings.ini $chan LurkOn
+      message $chan $user($nick) -> The !lurk message has been updated.
+    }
+    if ($2 = offmessage) {
+      writeini -n BotSettings.ini $chan LurkOff
+      message $chan $user($nick) -> The !lurkoff message has been updated.
+    }
+  }
+}
+
+on *:text:!chatters:#: {
+  if ($access($nick) <= $chatterslevel) {
+    set %c 0
+    while (%c < $nick(#,0,a)) {
+      inc %c
+    }
+    message # $iif(%c != 0,There are %c users currently in chat.,There are currently no users in chat.)
+  }
+}
+
+alias chatterslevel {
+  return $iif($readini(CommandLevels.ini,$chan,!chatters) != $null, $readini(CommandLevels.ini,$chan,!chatters), 800)
+}
+
+on *:text:!level !chatters &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 300-900) {
+      writeini -n CommandLevels.ini $chan !chatters $3
+      message $chan $user($nick) -> The command userlevel for !chatters has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+on *:text:!moderators:#: {
+  if ($access($nick) <= $moderatorslevel) {
+    set %t 1
+    while (%t <= $nick(#,0,o)) {
+      set %tmod $iif(%tmod,%tmod $capital($nick(#,%t,o)) $+ %comma ,$capital($nick(#,%t,o)) $+ %comma)
+      inc %t
+    }
+    set %tmod $left(%tmod,$calc($len(%tmod) - 1)) $+ .
+    message # Moderators Online: $iif(%tmod,%tmod,None)
+    unset %tmod
+  }
+}
+
+alias moderatorslevel {
+  return $iif($readini(CommandLevels.ini,$chan,!moderators) != $null, $readini(CommandLevels.ini,$chan,!moderators), 800)
+}
+
+on *:text:!level !moderators &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 300-900) {
+      writeini -n CommandLevels.ini $chan !moderators $3
+      message $chan $user($nick) -> The command userlevel for !moderators has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+on *:text:!bot *:#: {
+  if ($access($nick) <= $botlevel) {
+    if ($2) {
+      message $chan $2 -> I am $capital($me) $+ : a bot running on scripts created by Heep123.
+    }
+    else {
+      message $chan I am $capital($me) $+ : a bot running on scripts created by Heep123.
+    }
+  }
+}
+
+alias botlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!bot) != $null, $readini(CommandLevels.ini,$chan,!bot), 800)
+}
+
+on *:text:!level !bot &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 300-900) {
+      writeini -n CommandLevels.ini $chan !bot $3
+      message $chan $user($nick) -> The command userlevel for !bot has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+on *:text:!say*:#: {
+  if ($access($nick) <= $saylevel) {
+    message $chan $2-
+  }
+}
+
+alias saylevel {
+  return $iif($readini(CommandLevels.ini,$chan,!say) != $null, $readini(CommandLevels.ini,$chan,!say), 600)
+}
+
+on *:text:!level !say &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 300-900) {
+      writeini -n CommandLevels.ini $chan !say $3
+      message $chan $user($nick) -> The command userlevel for !say has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+on *:join:#: {
+  if ($nick = $me) {
+    write -c Presets.ini
+    set %comma $chr(44)
+    $+(timerantilockout.,$chan 0 65) remini AntiGlobal.ini AntiGlobal $chan
+    message $chan Hello! I'm $capital($me) $+ , a Twitch Chat Bot running on scripts by Heep123. Thank you for using me to moderate your channel! <3
+  }
+}
+
+on *:text:*:#: {
+  if ($1 = ! $+ $me) {
+    if (!$2) {
+      if ($access($nick) <= 500) {
+        message $chan $user($nick) -> Insufficient Parameters! Usage: $($+(%,botcom.,$chan),2)) <remove // reconnect // moderate // commands // antiglobal>  
+      }
+    }
+    elseif ($2 = remove) {
+      if ($access($nick) <= 300) {
+        message $chan $user($nick) -> Leaving Channel
+        part $chan
+      }
+    }
+    elseif ($2 = reconnect) {
+      if ($access($nick) <= 400) {
+        message $chan $user($nick) -> Reconnecting...
+        Reconnect $chan
+      }
+    }
+    elseif ($2 = moderate) {
+      if ($access($nick) <= $heepsbotlevel) {
+        if ($me isop #) {
+          message $chan $user($nick) -> I am a moderator of this channel.
+        }
+        else {
+          message $chan $user($nick) -> I am not a moderator of this channel.
+        }
+      }
+    }
+    elseif ($2 = commands) {
+      if ($access($nick) <= $heepsbotlevel) {
+        message $chan You can view Heepsbot commands here: http://goo.gl/gudEpe
+      }
+    }
+    elseif ($2 = antiglobal) {
+      if ($access($nick) <= $heepsbotlevel) {
+        if ($me !isop #) {
+          message $chan $user($nick) -> I can talk $calc(14 - $readini(AntiGlobal.ini, AntiGlobal, $chan)) more times this minute.
+        }
+        else {
+          message $chan $user($nick) -> I can talk $calc(94 - $readini(AntiGlobal.ini, AntiGlobal, $chan)) more times this minute.
+        }
+      }
+    }
+    elseif ($2 = serverreconnect) {
+      if ($access($nick) <= 5) {
+        message $chan $user($nick) -> Reconnecting...
+        server
+      }
+    }
+    elseif ($2 = twitter) {
+      message $chan Follow @Heepsbot on Twitter for updates!
+    }
+    elseif ($2 = wiki) {
+      message $chan View the Heepsbot Reddit Wiki here: https://goo.gl/TzNAes
+    }
+  }
+  inc %totalmessages
+  inc %daymessages
+}
+
+alias heepsbotlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!heepsbot) != $null, $readini(CommandLevels.ini,$chan,!heepsbot), 800)
+}
+
+on *:text:!level *:#: {
+  if ($2 = !heepsbot) || ($2 = ! $+ $me) {
+    if ($access <= 400) {
+      if ($3 isnum 300-900) {
+        writeini -n CommandLevels.ini $chan !heepsbot $3
+        message $chan $user($nick) -> The command userlevel for ! $+ $me has been updated.
+      }
+      else {
+        message $chan $user($nick) -> You must enter a valid userlevel.
+      }
+    }
+  }
+}
+
+alias message {
+  if ($me isop $1) { 
+    if ($readini(AntiGlobal.ini, AntiGlobal, $1) >= 95) { return }
+  }
+  else {
+    if ($readini(AntiGlobal.ini, AntiGlobal, $1) >= 15) { return }
+  }
+  msg $1 $2-
+  writeini -n AntiGlobal.ini AntiGlobal $1 $calc($readini(AntiGlobal.ini, AntiGlobal, $1) + 1)
+}
+alias owner {
+  return $mid($chan,2)
+}
+alias Reconnect {
+  part $1
+  $+(timerreconnect.,$chan 1 1) join $1
+}
+on *:connect: {
+  if ($server = tmi.twitch.tv) {
+    timerdaymessages off
+    timerdaymessages -o 0 86400 unset %daymessages
+    /raw CAP REQ :twitch.tv/membership
+  }
+}
+
+;JSON READER
+alias JSONOpen {
+  var %init = function init(a,b){errortext="";data="";url=b ? b : "";method="GET";headers=[];parsedJSON={};status=a;fso=new ActiveXObject("Scripting.FileSystemObject")}
+  var %read = function readFile(filename){var ado=new ActiveXObject("ADODB.Stream");ado.CharSet="utf-8";ado.Open();ado.LoadFromFile(filename);if(!ado.EOF){data=ado.ReadText();}ado.close()}
+  var %json = "object"!==typeof JSON&&(JSON={});(function(){if(!JSON.hasOwnProperty("parse")||!JSON.parse)JSON.parse=function(t){if(/^[\],:{}\s]*$/.test((t=(String(t)).replace(/[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,function(a){return'\\u'+('0000'+a.charCodeAt(0).toString(16)).slice(-4)})).replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,'@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,']').replace(/(?:^|:|,)(?:\s*\[)+/g,''))){return eval('('+t+')')}throw new SyntaxError('parse')}}())
+  var %xhr = function xhr(){var a,b=['MSXML2.SERVERXMLHTTP.6.0','MSXML2.SERVERXMLHTTP.3.0','MSXML2.SERVERXMLHTTP','MSXML2.XMLHTTP.6.0','MSXML2.XMLHTTP.3.0','Microsoft.XMLHTTP'],c;for(a=0;a<b.length;a++){try{c=xhrObj=new ActiveXObject(b[a]);break}catch(e){}}if(typeof c==="undefined"){status="error";errortext="Unable to locate an XMLHTTP object for use"}else{c.open(method,url,false);for(a=0;a<headers.length;a++){try{c.setRequestHeader(headers[a][0],headers[a][1])}catch(ee){status="error";errortext=ee.message; return}}c.send(data);if(c.status!==200){status="error";errortext="Unable to retrieve data - Server Error: " + c.status}else{status="Parsed";try{parsedJSON=JSON.parse(c.responseText)}catch(ee){status="error";errortext="Unable to parse Retrieved Data"}}}}
+  var %switches = -
+  var %com
+  var %error
+  var %close = $false
+  var %file
+  var %rem
+  var %i
+
+  if (-* iswm $1) {
+    %switches = $1
+    tokenize 32 $2-
+  }
+  var %com = JSONHandler:: $+ $1
+
+  if (!$regex(%switches, /^-[ufbwd]*$/)) {
+    %error = Invalid switches specified
+  }
+  elseif ($regex(%switches, /([ufbwd])\1/)) {
+    %error = Duplicate switch specified ( $+ $regml(1) $+ )
+  }
+  elseif ($regex(%switches, /([ufb])/g) > 1) {
+    %error = Conflicting switches specified (- $+ $regml(1) $+ , - $+ $regml(2) $+ $iif($regml(3), $chr(44) - $+ $v1) $+ )
+  }
+  elseif (w isin %switches && u !isin %switches) {
+    %error = Invalid switch (-w is only for use with -u)
+  }
+  elseif ($0 < 2) {
+    %error = Required parameters missing
+  }
+  elseif (!$regex($1,/^[a-z\d_.-]+$/i)) {
+    %error = Invalid name specified (Can only contant letters, numbers, _, ., and -)
+  }
+  elseif ($com(%com)) {
+    %error = Specified name in use
+  }
+  elseif (u isin %switches && $0 > 2) {
+    %error = Invalid URL specified. (Contains Spaces: $2-)
+  }
+  elseif (f isin %switches && !$isfile($2-)) {
+    %error = File not found: $2-
+  }
+  elseif (b isin %switches && &* !iswm $2) {
+    %error = Invalid binary variable specified (No '&' Prefix)
+  }
+  elseif (b isin %switches && $0 > 2) {
+    %error = Invalid binary variable specified (Contains Spaces: $2-)
+  }
+  elseif (b isin %switches && $bvar($2, 0) < 1) {
+    %error = Invalid binary variable specified (No content)
+  }
+  else {
+    %close = $true
+    if (!$JSON::ComOpen(%com, MSScriptControl.ScriptControl) || $comerr) {
+      %error = Unable to create an instance of MSScriptControl.ScriptControl
+    }
+    elseif (!$com(%com, language, 4, bstr, jscript) || $comerr) {
+      %error = Unable to set ScriptControl's language to Javascript
+    } 
+    elseif (!$com(%com, addcode, 1, bstr, %init) || $comerr) {
+      %error = Unable to add init() to ScriptControl
+    }
+    elseif (!$com(%com, addcode, 1, bstr, %xhr) || $comerr) {
+      %error = Unable to add xhr() to ScriptControl
+    }
+    elseif (!$com(%com, addcode, 1, bstr, %read) || $comerr) {
+      %error = Unable to add readFile() to ScriptControl
+    }
+    elseif (!$com(%com, ExecuteStatement, 1, bstr, %JSON) || $comerr) {
+      %error = Unable to Initalize the JSON parser object
+    }
+    elseif (!$com(%com, ExecuteStatement, 1, bstr, $iif(u isin %switches, $+(init,$chr(40), "XHR", $chr(44), $qt($JSON::Escape($2)), $chr(41)), $+(init,$chr(40), "Parsed", $chr(44), "", $chr(41)))) || $comerr) {
+      %error = Unable to initalize variables for ScriptControl
+    }
+    elseif (u !isin %switches) {
+      %file = $JSON::File($1)
+      %rem = $true
+      if (f isin %switches) {
+        %file = $longfn($2)
+        %rem = $false
+      }
+      elseif (b isin %switches) {
+        bwrite $qt(%file) 0 -1 $2
+      }
+      else {
+        write -n $qt(%file) $2-
+      }
+      if (!$com(%com, ExecuteStatement, 1, bstr, $JSON::Funct(readFile, $qt($JSON::Escape(%file)))) || $comerr) {
+        %error = Unable to read contents of data-passing file
+      }
+      elseif (!$com(%com, ExecuteStatement, 1, bstr, $JSON::Funct(parsedJSON=JSON.parse, data)) || $comerr) {
+        %error = Unable to parse data into valid JSON
+      }
+    }
+    elseif (w !isin %switches) {
+      if (!$com(%com, ExecuteStatement, 1, bstr, $+(xhr,$chr(40),$chr(41))) || $comerr) {
+        %error = Unable to start the web request for $2
+      }
+      elseif (!$com(%com, eval, 1, bstr, errortext) || $com(%com).result) {
+        %error = Unable to retrieve data $+ $iif($v1,: $v1,)
+      }
+    }
+    if (d isin %switches) {
+      $+(.timer,%com) 1 0 JSONClose $1
+    }
+  }
+  :error
+  set -eu0 %JSONError $iif($error, $v1, %error)
+  if (%rem && %file && $isfile(%file)) {
+    .remove $qt(%file)
+  }
+  if (%JSONError && %close && $com(%com)) { 
+    set -eu0 $+(%,%com,::error) %JSONError
+    .comclose %com
+  }
+}
+alias JSONError {
+  return %JSONError
+}
+
+alias JSONURLOption {
+  var %com = JSONHandler:: $+ $1
+  var %error
+  var %head
+  var %value
+  var %x = 2
+
+  if (!$com(%com)) {
+    return
+  }
+  unset % [ $+ [ %com ] $+ ] ::error
+  if ($0 < 3) {
+    %error = Missing parameters
+  }
+  elseif (!$com(%com, eval, 1, bstr, status) || $com(%com).result != XHR) {
+    %error = HTTP Request already completed or wasn't specified
+  }
+  elseif ($2 == method) {
+    if (!$regex($3-, /^(?:GET|POST|PUT|DELETE)$/i)) {
+      %error = Invalid HTTP Request method Specified: $3-
+    }
+    elseif (!$com(%com, ExecuteStatement, 1, bstr, method=" $+ $upper($3) $+ ") || $comerr) {
+      %error = Unable to set HTTP Request method
+    }
+  }
+  else {
+    if (!$com(%com, ExecuteStatement, 1, bstr, $JSON::Funct(headers.push,[ $+ $qt($JSON::Escape($2)), $qt($JSON::Escape($3-)) $+ ])) || $comerr) {
+      %error = Unable to set HTTP Header: %head $+ : $+ %value
+    }
+  }
+  :error
+  %error = $iif($error, $v1, %error)
+  if (%error) {
+    reseterror
+    set -e $+(%,%com,::Error) %error
+  }
+}
+alias JSONGet { 
+  var %switches -
+  if (-* iswm $1) {
+    %switches = $1
+    tokenize 32 $2-
+  }
+  var %com = JSONHandler:: $+ $1
+  var %file = $JSON::File($1)
+  var %error
+  var %rem = $true
+  if ($com(%com)) {
+    if ($com(%com, eval, 1, bstr, status) && $com(%com).result !== XHR) {
+      %error = HTTP Request already completed or wasn't specified
+    }
+    elseif (!$regex(%switches, /^-[bf]*$/)) {
+      %error = Invalid switches specified
+    }
+    elseif ($regex(%switches, /([bf])\1/)) {
+      %error = Duplicate switch specified ( $+ $regml(1) $+ )
+    }
+    elseif ($regex(%switches, /([bf])/g) > 1) {
+      %error = Conflicting switches specified (- $+ $regml(1) $+ , - $+ $regml(2) $+ )
+    }
+    elseif (b isin %switches && &* !iswm $2) {
+      %error = Invalid binary variable specified (No '&' Prefix)
+    }
+    elseif (b isin %switches && $0 > 2) {
+      %error = Invalid binary variable specified (Contains Spaces: $2-)
+    }
+    elseif (f isin %switches && !$isfile($2-)) {
+      %error = File not found: $2-
+    }
+    else {
+      if (b isin %switches && $bvar($2,0)) {
+        bwrite $qt(%file) 0 -1 $2
+      }
+      elseif (f isin %switches) {
+        %file = $longfn($2-)
+        %rem = false
+      }      
+      elseif ($2-) {
+        write -n $qt(%file) $2-
+      }
+      %file = $longfn(%file)
+      if ($isfile(%file) && (!$com(%com, ExecuteStatement, 1, bstr, $JSON::Funct(readFile,$qt($JSON::Escape(%file)))) || $comerr)) {
+        %error = Unable to pass data to JSON Handler
+      }
+      elseif (!$com(%com, ExecuteStatement, 1, bstr, xhr $+ $chr(40) $+ $chr(41)) || $comerr) {
+        %error = Unable to retrieve data from specified URL 
+      }
+      elseif (!$com(%com, eval, 1, bstr, errortext) || $com(%com).result) {
+        %error = $v1
+      }
+    }
+  }
+  :error
+  %error = $iif($error, $v1, %error)
+  reseterror
+  if (%rem && $isfile(%file)) { 
+    .remove %file 
+  }
+  if (%error) {
+    set -eu0 $+(%,%com,::Error) %error
+  }
+}
+alias JSON {
+  var %com
+  var %x = 1
+  var %i = 0
+  var %get = parsedJSON
+  var %tok
+  var %res
+  var %LTLError
+  if ($regex($1,/^\d+$/) && $0 === 1) {
+    while ($com(%x)) {
+      if (JSONHandler::* iswm $v1) {
+        %com = $v2
+        inc %i
+        if (%i === $1) { 
+          return $mid(%com,14-)
+        }
+      }
+      inc %x
+    }
+    return $iif($1 == 0, %i)
+  }
+  elseif ($regex($1, /^JSONHandler::CHILD::([^:]+)::(.*)$/)) {
+    %com = $regml(1)
+    %get = $regml(2)
+  }
+  else {
+    %com = JSONHandler:: $+ $1
+  }
+  if ($com(%com)) {
+    if ($0 == 1) {
+      if ($prop == isChild) {
+        return $iif($regex($1, /^JSONHandler::CHILD::([^:]+)::(.*)$/), $true, $false)
+      }
+      elseif ($prop == error || $prop === errormessage) {
+        return $(,$+(%,%com,::error))
+      }
+      elseif ($com($1)) {
+        return $1
+      }
+    }
+    elseif (!$com(%com, eval, 1, bstr, status)) {
+      set -eu0 $+(%,%com,::error) Unable to get status of JSON handler
+    }
+    elseif ($com(%com).result == error) {
+      noop $com(%com, eval, 1, bstr, errortext)
+      set -eu0 $+(%, %com, ::error) $com(%com).result
+    }
+    elseif (!$com(%com, eval, 1, bstr, status) || $com(%com).result != parsed) {
+      set -eu0 $+(%,%com,::error) JSON Handler waiting for HTTP Request
+    }
+    else {
+      %x = 2
+      while (%x <= $0) {
+        %tok = $(,$ $+ %x)
+        if (!$regex(%tok, /^\d+$/)) {
+          %tok = $qt($replace(%tok,\,\\,",\"))
+        }
+        %get = $+(%get,[,%tok,])
+        inc %x
+      }
+      if (!$com(%com, eval, 1, bstr, %get) || $comerr) {
+        set -eu0 $+(%,%com,::error) Invalid Item|index specified
+      }
+      else {
+        %LTLError = $true
+        %res = $com(%com).result
+        %LTLError = $false
+        if (%res == [object]) {
+          return JSONHandler::CHILD:: $+ $1 $+ :: $+ %get
+        }
+        else {
+          return %res
+        }
+      }
+    }
+  }
+  return
+  :error
+  set -eu0 $+(%,%com,::error) $iif(%LTLError, Line to Long; truncated at 4000 bytes, $error)
+  reseterror
+  if (%LTLError) {
+    %res = $left($com(%com).result, 4000)
+  }
+}
+alias JSONClose {
+  var %com = JSONHandler:: $+ $1
+  unset % [ $+ [ %com ] $+ ] ::*
+  if ($com(%com)) { 
+    .comclose $v1 
+  }
+  if ($timer(%com)) { 
+    $+(.timer,%com) off 
+  }
+}
+alias JSONList {
+  var %x = 1, %i = 0
+  while ($com(%x)) {
+    if (JSONHandler::* iswm $v1) {
+      inc %i
+      echo $color(info text) -a * # $+ %i : $regsubex($v2, /^JSONHandler::/,)
+    }
+    inc %x
+  }
+  if (!%i) {
+    echo $color(info text) -a * No active JSON handlers
+  }   
+}
+alias -l JSON::ComOpen { 
+  .comopen $1- 
+  if ($com($1) && !$comerr) { 
+    return $true
+  } 
+  :error 
+  reseterror 
+  if ($com($1)) { 
+    .comclose $1 
+  }
+}
+alias -l JSON::Escape { 
+  return $replace($1,\,\\,",\") 
+}
+alias -l JSON::File { 
+  var %a = 1 
+  while ($isfile($scriptdirJSON $+ $1 $+ %a $+ .json)) { inc %a } 
+  return $+($scriptdirJSON, $1, %a, .json) 
+}
+alias -l JSON::Funct {
+  var %a, %i = 1
+  while (%i < $0) {
+    inc %i 
+    %a = $addtok(%a, $(, $ $+ %i), 44)
+  } 
+  return $1 $+ ( $+ %a $+ )
+}
