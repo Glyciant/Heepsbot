@@ -1,0 +1,80 @@
+; Script Name: Blame.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!blame add *:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(Blame.ini,$chan,$3) = $null) {
+      if ($3 = add) || ($3 = remove) || ($3 = set) {
+        message $chan $user($nick) -> Blame $3 could not be created.
+      }
+      else {
+        if (-pc= isin $5) {
+          writeini -n Blame.ini $+($chan,.,Cost) $3 $mid($5,5)
+        }
+        elseif (-ul= isin $5) {
+          writeini -n Blame.ini $+($chan,.,Level) $3 $mid($5,5)
+        }
+        if (-pc= isin $4) {
+          writeini -n Blame.ini $+($chan,.,Cost) $3 $mid($4,5)
+        }
+        elseif (-ul isin $4) {
+          writeini -n Blame.ini $+($chan,.,Level) $3 $mid($4,5)
+        }
+        writeini -n Blame.ini $chan $3 0
+        message $chan $user($nick) -> Blame $3 has been created.
+      }
+    }
+    else {
+      message $chan $user($nick) -> Blame $3 already exists.
+    } 
+  }
+}
+
+on *:text:!blame set *:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(Blame.ini,$chan,$3) != $null) {
+      if ($4 isnum) {
+        writeini -n Blame.ini $chan $3 $4
+        message $chan $user($nick) -> Blame $3 has been set to $4 $+ .
+      }
+      else {
+        message $chan $user($nick) -> You must enter a number to set blame $3 to.
+      }
+    }
+    else {
+      message $chan $user($nick) -> Blame $3 does exist. 
+    }
+  }
+}
+
+on *:text:!blame remove &:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(Blame.ini,$chan,$3) != $null) {
+      remini Blame.ini $chan $3
+      message $chan $user($nick) -> Blame $3 has been removed.
+    }
+    else {
+      message $chan $user($nick) -> Blame $3 does exist. 
+    }
+  }
+}
+
+on *:text:!blame &:#: {
+  if ($readini(Blame.ini,$chan,$2) != $null) {
+    if ($access($nick) <= $iif($readini(Blame.ini,$+($chan,.,Level),$2) != $null,$readini(Blame.ini,$+($chan,.,Level),$2),800)) {
+      if ($readini(Blame.ini,$+($chan,.,Cost),$2) != $null) {
+        if ($calc($readini(PointsUpdated.ini,$chan,$nick) - $readini(Blame.ini,$+($chan,.,Cost),$2)) < 0) {
+          message $chan $user($nick) -> You do not have enough $points to blame $2 $+ .
+          return
+        }
+        else {
+          writeini -n PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) - $readini(Blame.ini,$+($chan,.,Cost),$2))
+        }
+      }
+      writeini -n Blame.ini $chan $2 $calc($readini(Blame.ini,$chan,$2) + 1)
+      message $chan $capital($2) has been blamed $readini(Blame.ini,$chan,$2) times.
+    }
+  }
+}
