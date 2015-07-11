@@ -1,0 +1,102 @@
+; Script Name: OnlineCheck.ini
+; Type: Recommended
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:join:#: {
+  if ($nick = $me) {
+    remini BotSettings.ini $chan AutoHostStatus
+    $+(timerlivecheck.,$chan 0 60) LiveCheck $owner $chan
+  }
+}
+
+on *:part:#: {
+  if ($nick = $me) {
+    $+(timerlivecheck.,$chan off)
+    $+(timerautohost.,$chan off)
+  }
+}
+
+on *:text:!livemessage *:#: {
+  if ($access($nick) <= 400) {
+    if ($2 = on) {
+      writeini -n BotSettings.ini $chan Livemessage .
+      message $chan $user($nick) -> Live-Check has been enabled.
+    }
+    if ($2 = off) {
+      remini BotSettings.ini $chan Livemessage
+      message $chan $user($nick) -> Live-Check has been disabled.
+    }
+    if ($2 = onmessage) {
+      writeini -n BotSettings.ini $chan Onmessage $3-
+      message $chan $user($nick) -> Online message updated.
+    }
+    if ($2 = offmessage) {
+      writeini -n BotSettings.ini $chan Offmessage $3-
+      message $chan $user($nick) -> Offline message updated.
+    }
+  }
+}
+
+alias LiveCheck {
+  if (!$1) { return }
+  set $+(%,livelink.,$1) https://api.twitch.tv/kraken/streams/ $+ $1
+  set $+(%,liveticks.,$1) twcf_ $+ $ticks
+  JSONOpen -ud $($+(%,liveticks.,$1),2) $($+(%,livelink.,$1),2)
+  set $+(%,livecheck.,$1) $json($($+(%,liveticks.,$1),2),stream) 
+  :end
+  if ($($+(%,livecheck.,$1),2) = $null) {
+    if ($BotSetting(Status,$2) = Online) {
+      if ($BotSetting(Livemessage,$2) != $null) {
+        message $2 $iif($BotSetting(Offmessage,$2) != $null,$BotSetting(Offmessage,$2),The stream is now offline.)
+      }
+      remini BotSettings.ini $2 Status
+      remini BotSettings.ini $2 Subs
+      remini BotSettings.ini $2 Follows
+      remini BotSettings.ini $2 Viewers
+      $+(timerviewcheck.,$2 off)
+    }
+    if ($BotSetting(AutoHostStatus,$2) = $null) {
+      if ($BotSetting(AutoHost,$2) != $null) {
+        writeini -n BotSettings.ini $2 AutoHostStatus On
+        HostChange $1 $2
+        $+(timerautohost.,$2 0 900) HostChange $1 $2
+      }
+    }
+  }
+  elseif ($($+(%,livecheck.,$1),2) isnum) {
+    if ($BotSetting(Status,$2) = $null) {
+      if ($BotSetting(Livemessage,$2) != $null) {
+        message $2 $iif($BotSetting(Onmessage,$2) != $null,$BotSetting(Onmessage,$2),The stream is now live!)
+      }
+      $+(timerautohost.,$2 off)
+      $+(timerviewcheck.,$2 0 60) ViewCheck $1 $2
+      writeini -n BotSettings.ini $2 Status Online
+      remini BotSettings.ini $2 AutoHostStatus
+    }
+  }
+  :end2
+  JSONClose $($+(%,liveticks.,$1),2)
+  unset $+(%,livecheck.,$1)
+  unset $+(%,livelink.,$1)
+  unset $+(%,liveticks.,$1)
+}
+
+alias ViewCheck {
+  if (!$1) { return }
+  set $+(%viewlink.,$1) https://api.twitch.tv/kraken/streams/ $+ $1
+  set $+(%viewticks.,$1) twcf_ $+ $ticks
+  JSONOpen -ud $($+(%viewticks.,$1),2) $($+(%viewlink.,$1),2)
+  set $+(%viewcheck.,$1) $json($($+(%viewticks.,$1),2),stream,viewers) 
+  if ($($+(%viewcheck.,$1),2) = $null) { return }
+  :end
+  writeini -n BotSettings.ini $2 Viewers $($+(%viewcheck.,$1),2)
+  if ($BotSetting(Viewers,$2) > $BotSetting(ViewerRecord,$2)) {
+    writeini -n BotSettings.ini $2 ViewerRecord $readini(BotSettings.ini,$chan,Viewers)
+  }
+  :end2
+  JSONClose $($+(%viewticks.,$1),2)
+  unset $+(%viewcheck.,$1)
+  unset $+(%viewlink.,$1)
+  unset $+(%viewticks.,$1)
+}
