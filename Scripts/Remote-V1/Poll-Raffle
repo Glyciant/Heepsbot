@@ -1,0 +1,230 @@
+; Script Name: Poll_Raffle.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!poll open *:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Poll.ini, $chan, Status) = Open) {
+      message $chan $user($nick) -> There is already a poll running, please close this before opening another.
+    }
+    elseif ($readini(Poll.ini, $chan, Status) = Closed) {
+      message $chan $user($nick) -> The poll must be reset before another is opened.
+    }
+    else {
+      set %w $0
+      set %q 3
+      set %r 1
+      writeini -n Poll.ini $chan Status Open
+      writeini -n Poll.ini $chan Total $calc($0 - 2)
+      while (%q <= %w) {
+        writeini -n Poll.ini $chan $+(OpName,%r) $($+($,%q),2)
+        writeini -n Poll.ini $chan $+(OpNum,%r) 0
+        inc %q
+        inc %r
+      }
+      message $chan /me > Poll Open! To vote, use !vote <Option Number 1- $+ $calc($0 - 2) $+ >
+    }
+  }
+}
+
+on *:text:!poll close:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Poll.ini, $chan, Status) != Open) {
+      message $chan $user($nick) -> The poll must be opened before it is closed.
+    }
+    else {
+      writeini -n Poll.ini $chan Status Closed
+      message $chan /me > The poll has been closed! No more votes will be counted.
+    }
+  }
+}
+
+on *:text:!poll reset:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Poll.ini, $chan, Status) != Closed) {
+      message $chan $user($nick) -> The poll must be closed before it is reset.
+    }
+    else {
+      remini Poll.ini $chan 
+      writeini -n Poll.ini $chan Status Reset
+      message $chan $user($nick) -> The poll has been reset.
+    }
+  }
+}
+
+on *:text:!poll:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Poll.ini, $chan, Status) = Open) {
+      message $chan $user($nick) -> The poll is currently open.
+    }
+    elseif ($readini(Poll.ini, $chan, Status) = Closed) {
+      message $chan $user($nick) -> The poll is currently closed.
+    }
+    elseif ($readini(Poll.ini, $chan, Status) = Reset) {
+      message $chan $user($nick) -> The poll is currently closed and has been reset.
+    }
+  }
+}
+
+on *:text:!vote &:#: {
+  if ($readini(Poll.ini, $chan, Status) = Open) {
+    if ($2 !isnum) { return }
+    if ($readini(Poll.ini, $chan, $nick) != $null) {
+      set %p $readini(Poll.ini, $chan, $nick)
+      writeini -n Poll.ini $chan $+(OpNum,%p) $calc($readini(Poll.ini, $chan, $+(OpNum,%p)) - 1)
+    }
+    writeini -n Poll.ini $chan $+(OpNum,$2) $calc($readini(Poll.ini, $chan, $+(OpNum,$2)) + 1)
+    writeini -n Poll.ini $chan $nick $2
+    if (!$($+(%,pollmessage.,$chan),2)) { 
+      set -u30 $+(%,pollmessage.,$chan) ON
+      message $chan One or more votes counted
+    }
+  }
+}
+
+on *:text:!poll results*:#: {
+  if ($access($nick) <= 500) {
+    if (($3 = all) || (!$3)) {
+      set %l $readini(Poll.ini, $chan, Total)
+      set %k 1
+      while (%k <= %l) {
+        message $chan $readini(Poll.ini, $chan, $+(OpName,%k)) (Option %k $+ ) gained $readini(Poll.ini, $chan, $+(OpNum,%k)) votes.
+        inc %k
+      }
+    }
+    elseif ($3 = top) {
+      set %y 1
+      set %g $readini(Poll.ini, $chan, Total)
+      set %highscore 0
+      set %score 0
+      while (%y <= %g) {
+        set %score $readini(Poll.ini, $chan, $+(OpNum,%y))
+        if (%score > %highscore) {
+          set %highscore %score
+          set %highop %y
+        }
+        inc %y
+      }
+      message $chan $readini(Poll.ini, $chan, $+(OpName,%highop)) (Option %highop $+ ) won with %highscore votes.
+    }
+    elseif ($3 isnum) {
+      message $chan $readini(Poll.ini, $chan, $+(OpName,$3)) (Option $3 $+ ) gained $readini(Poll.ini, $chan, $+(OpNum,$3)) votes.
+    }
+  }
+}
+
+on *:text:!raffle draw:#: {
+  if ($access($nick) <= 400) {
+    if ($BotSetting(RaffleStatus) = Closed) {
+      message $chan The winner is... $capital($ini(Raffle.ini, $chan, $rand(1,$ini(Raffle.ini,$chan,0)))) $+ !
+    }
+    else {
+      message $chan $user($nick) -> You must close the raffle before choosing a winner.
+    }
+  }
+}
+
+on *:text:!raffle random:#: {
+  if ($access($nick) <= 400) {
+    message $chan The winner is... $capital($nick(#,$rand(1,$nick(#,0,a)),a))
+  }
+}
+
+on *:text:!raffle open*:#: {
+  if ($access($nick) <= 400) {
+    if ($BotSetting( RaffleStatus) = reset) {
+      writeini -n BotSettings.ini $chan RaffleStatus Open
+      if (-pc= isin $5) {
+        writeini -n BotSettings.ini $chan RaffleCost $mid($5,5)
+      }
+      elseif (-ul= isin $5) {
+        writeini -n BotSettings.ini $chan RaffleLevel $mid($5,5)
+      }
+      elseif (-key isin $5) {
+        writeini -n BotSettings.ini $chan RaffleKey $mid($5,6)
+      }
+      if (-pc= isin $4) {
+        writeini -n BotSettings.ini $chan RaffleCost $mid($4,5)
+      }
+      elseif (-ul isin $4) {
+        writeini -n BotSettings.ini $chan RaffleLevel $mid($4,5)
+      }
+      elseif (-key= isin $4) {
+        writeini -n BotSettings.ini $chan RaffleKey $mid($4,6)
+      }
+      if (-pc= isin $3) {
+        writeini -n BotSettings.ini $chan RaffleCost $mid($3,5)
+      }
+      elseif (-ul= isin $3) {
+        writeini -n BotSettings.ini $chan RaffleLevel $mid($3,5)
+      }
+      elseif (-key= isin $3) {
+        writeini -n BotSettings.ini $chan RaffleKey $mid($3,6)
+      }
+      if ($BotSetting(RaffleKey) = $null) {
+        writeini -n BotSettings.ini $chan RaffleKey !raffle
+      }
+      elseif ($left($BotSetting(RaffleKey),1) != !) {
+        writeini -n BotSettings.ini $chan RaffleKey ! $+ $BotSetting(RaffleKey) 
+      }
+      message $chan /me > Raffle Open! Type ' $+ $BotSetting( RaffleKey) $+ ' to enter.
+    }
+    elseif ($BotSetting( RaffleStatus) = closed) {
+      message $chan $user($nick) -> Other raffles must be reset before another is opened.
+    }
+    else {
+      message $chan $user($nick) -> Other raffles must be closed and reset before another is opened.
+    }
+  }
+}
+
+on *:text:!raffle close:#: {
+  if ($access($nick) <= 400) {
+    if ($BotSetting( RaffleStatus) = open) {
+      writeini -n BotSettings.ini $chan RaffleStatus Closed
+      message $chan /me > Raffle Closed! No more entries will be counted.
+    }
+    else {
+      message $chan $user($nick) -> The raffle must be opened before it is closed.
+    }
+  }
+}
+
+on *:text:!raffle reset:#: {
+  if ($access($nick) <= 400) {
+    if ($BotSetting( RaffleStatus) = closed) {
+      remini Raffle.ini $chan
+      writeini -n BotSettings.ini $chan RaffleStatus Reset
+      message $chan $user($nick) -> The raffle has been reset.
+    }
+    else {
+      message $chan $user($nick) -> The raffle must be closed before it is reset.
+    }
+  }
+}
+
+on *:text:*:#: {
+  if ($BotSetting( RaffleStatus) = open) {
+    if ($iif($BotSetting( RaffleLevel) != $null,$BotSetting( RaffleLevel),800) >= $access($nick)) {
+      if ($BotSetting( RaffleKey) = $1) {
+        if ($readini(Raffle.ini,$chan,$nick) != $null) { return }
+        if ($BotSetting(RaffleCost) != $null) {
+          if ($readini(Points.ini,$chan,$nick) < $BotSetting(RaffleCost)) {
+            message $chan $user($nick) -> You do not have enough $points to use this command.
+            return
+          }
+          else {
+            if ($readini(PointsUpdated.ini,$chan,$nick) < $BotSetting(RaffleCost)) { return }
+            writeini -n PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) - $BotSetting(RaffleCost))
+          }
+        }
+        writeini -n Raffle.ini $chan $nick .
+        if (!$($+(%,raffleflood.,$chan),2)) {
+          set -u30 $+(%,raffleflood.,$chan) ON
+          message $chan One or more entries counted.
+        }
+      }
+    }
+  }
+}
