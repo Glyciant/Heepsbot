@@ -1,0 +1,179 @@
+; Script Name: UserFeatures.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!usercom create *:#: {
+  if ($readini(Points.ini,$chan,$nick) < $iif($BotSetting(UserComCost) != $null,$BotSetting(UserComCost),1000) {
+    message $chan $user($nick) -> You do not have enough $points to use this command.
+  }
+  else {
+    if ($readini(UserCommands.ini,$chan,$nick) = !) {
+      message $chan $user($nick) -> You are not allowed to have your own custom command.
+    }
+    elseif ($3 = !) {
+      message $chan $user($nick) -> You cannot use this as a command.
+    }
+    elseif ($readini(UserCommands.ini,$chan,$nick) != $null) {
+      message $chan $user($nick) -> You already have your own custom command.
+    }
+    else {
+      writeini -n UserCommands.ini $chan $nick $3- 
+      writeini -n Points.ini $chan $nick $calc($readini(Points.ini,$chan,$nick) - $iif($BotSetting(UserComCost) != $null,$BotSetting(UserComCost),1000))
+      message $chan $user($nick) now has their own command!
+    }
+  }
+}
+
+on *:text:!usercom change *:#: {
+  if ($readini(UserCommands.ini,$chan,$nick) != $null) {
+    message $chan $user($nick) -> You do not have your own custom command.
+  }
+  elseif ($readini(UserCommands.ini,$chan,$nick) = !) {
+    message $chan $user($nick) -> You are not allowed to have your own custom command.
+  }
+  else {
+    writeini -n UserCommands.ini $chan $nick $3- 
+    message $chan $user($nick) now has their own command!
+  }
+}
+
+on *:text:!usercom:#: {
+  if ($readini(UserCommands.ini,$chan,$nick) != $null) && if ($readini(UserCommands.ini,$chan,$nick) != !) {
+    message $chan $capital($nick) $+ : $readini(UserCommands.ini,$chan,$nick)
+  }
+}
+
+on *:text:!usercom manage *:#: {
+  if ($3 = view) {
+    if ($access($nick) <= 500) {
+      if ($readini(UserCommands.ini, $chan, $4) = $null) { 
+        message $chan $user($nick) -> $4 does not have a custom command.
+      }
+      else {
+        message $chan $user($nick) -> $4 $+ 's Command: $readini(UserCommands.ini, $chan, $4)
+      }
+    }
+  }
+  elseif ($3 = delete) {
+    if ($access($nick) <= 400) {
+      if ($readini(UserCommands.ini, $chan, $4) = !) {
+        message $chan $user($nick) -> $4 has already been banned from the user command system.
+      }
+      else {
+        writeini -n UserCommands.ini $chan $4 !
+        message $chan $user($nick) -> $4 $+ 's username has been deleted and they have been banned from the user command system.
+      }
+    }
+  }
+  elseif ($3 = change) {
+    if ($access($nick) <= 400) {
+      if ($readini(UserCommands.ini, $chan, $4) = $null) { 
+        message $chan $user($nick) -> $4 does not have a custom command.
+      }
+      else {
+        writeini -n UserCommands.ini $chan $4 $5-
+        message $chan $user($nick) -> $4 $+ 's custom command has been updated.
+      }
+    }
+  }
+  elseif ($3 = unban) {
+    if ($access($nick) <= 400) {
+      remini UserCommands.ini $chan $4
+      message $chan $user($nick) -> $4 has been unbanned from the custom commands system.
+    }
+  }
+  elseif ($3 = value) {
+    if ($access($nick) <= 400) {
+      if ($4 isnum) {
+        writeini -n BotSettings.ini $chan UserComCost $4
+        message $chan $user($nick) -> Users now need $4 $points to get their custom command.
+      }
+    }
+  }
+}
+
+on *:text:!username create *:#: {
+  if ($3 = !) { message $chan $user($nick) -> ! cannot be used as a custom username. | return }
+  if ($readini(Usernames.ini, $2, $1) != $null) {
+    message $chan $user($nick) -> You already have your own custom username.
+  }
+  elseif ($readini(Points.ini,$chan,$nick) < $iif($BotSetting(UsernameCost) != $null,$BotSetting(UsernameCost),1000) {
+    message $chan $user($nick) -> You do not have enough $points to use this command.
+  }
+  else {
+    writeini -n Usernames.ini $chan $nick $3 
+    writeini -n Points.ini $chan $nick $calc($readini(Points.ini,$chan,$nick) - $iif($BotSetting(UsernameCost) != $null,$BotSetting(UsernameCost),1000))
+    message $chan $user($nick) -> $iif($3 = Heepsbot, Great name choice -) Your custom username has been created!
+  }
+}
+
+on *:text:!username change *:#: {
+  if ($readini(Usernames.ini, $chan, $nick) = $null) {
+    message $chan $user($nick) -> You do not already have a custom username.
+  }
+  elseif ($readini(Usernames.ini, $chan, $nick) = !) {
+    message $chan $user($nick) -> You are banned from using the custom username system.
+  }
+  elseif ($3 = !) {
+    message $chan $user($nick) -> ! cannot be used as a custom username.
+  }
+  else {
+    writeini -n Usernames.ini $chan $nick $3
+    message $chan $user($nick) -> Your custom username has been updated.
+  }
+}
+
+on *:text:!username manage value *:#: {
+  if ($access($nick) <= 400) {
+    if ($4 isnum) {
+      writeini -n BotSettings.ini $chan UsernameCost $4
+      message $chan $user($nick) -> The custom username cost has been updated.
+    }
+  }
+}
+
+on *:text:!username manage view *:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(Usernames.ini, $chan, $4) != $null) {
+      message $chan $user($nick) -> $4 has a custom username of $readini(Usernames.ini, $chan, $4) $+ . $iif($readini(Usernames.ini, Global, $4) = $null, They also have a global username of $readini(Usernames.ini, Global, $4) $+ .)
+    }
+    elseif ($readini(Usernames.ini, Global, $4) != $null) {
+      message $chan $user($nick) -> $4 does not have a custom username on the channel, but has a global username of $readini(Usernames.ini, Global, $4) $+ .
+    }
+    else {
+      message $chan $user($nick) -> $4 does not have a custom username.
+    }
+  }
+}
+
+on *:text:!username manage change *:#: {
+  if ($access($nick) <= 400) {
+    writeini -n Usernames.ini $chan $4 $5
+    message $chan $user($nick) -> $4 $+ 's custom username has been updated to $5 $+ . 
+  }
+}
+
+on *:text:!username manage delete *:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(Usernames.ini, $chan, $4) = !) {
+      message $chan $user($nick) -> $4 has already been banned from the custom username system.
+    }
+    else {
+      writeini -n Usernames.ini $chan $4 !
+      message $chan $user($nick) -> $4 $+ 's username has been deleted and they have been banned from the custom username system.
+    }
+  }
+}
+
+on *:text:!username manage unban *:#: {
+  if ($access($nick) <= 400) {
+    if ($readini(Usernames.ini, $chan, $4) = !) {
+      remini Usernames.ini $chan $4
+      message $chan $user($nick) -> $4 has been unbanned from the custom username system.
+    }
+    else {
+      message $chan $user($nick) -> $4 has not been banned from the custom username system.
+    }
+  }
+}
