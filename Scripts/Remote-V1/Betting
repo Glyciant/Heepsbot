@@ -1,0 +1,95 @@
+; Script Name: Betting.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!bet open *:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Bet.ini, $chan, Status) = Open) {
+      message $chan $user($nick) -> There is already a bet running, please close this before opening another.
+    }
+    elseif ($3 !isnum) {
+      message $chan $user($nick) -> You must choose a number to multiply winnings by.
+    }
+    else {
+      if ($left($4,4) = -ul=) {
+        writeini -n Bet.ini $chan UL $mid($4,5)
+      }
+      set %w $0
+      set %q $iif($left($4,4) = -ul=,5,4)
+      set %r 1
+      writeini -n Bet.ini $chan Status Open
+      writeini -n Bet.ini $chan Total $calc($0 - $iif($left($4,4) = -ul=,4,3))
+      writeini -n Bet.ini $chan Multiply $3
+      while (%q <= %w) {
+        writeini -n Bet.ini $chan $+(Op,%r) $($+($,%q),2)
+        inc %q
+        inc %r
+      }
+      message $chan /me > Bet Open! To vote, use !bet <Option Number 1- $+ $calc($0 - $iif($left($4,4) = -ul=,4,3) $+ ) $+ > <Number of $points to Bet>
+    }
+  }
+}
+
+on *:text:!bet close &:#: {
+  if ($access($nick) <= 500) {
+    if ($readini(Bet.ini, $chan, Status) = Open) {
+      if ($3 isnum) {
+        set %betwins 1
+        while (%betwins <= $ini(Bet.ini,$+($chan,.,Option),0)) {
+          set %betuser $ini(Bet.ini,$+($chan,.,Option),%betwins) {
+            if ($readini(Bet.ini,$+($chan,.,Option),%betuser) = $3) {
+              BetWin %betuser
+            }
+            else {
+              BetLose %betuser
+            }
+          }
+          inc %betwins
+        }
+        remini Bet.ini $chan
+        remini Bet.ini $+($chan,.,Points)
+        remini Bet.ini $+($chan,.,Option)
+        message $chan /me > The bet is now closed! All $points changes have been made.
+      }
+      else {
+        message $chan $user($nick) -> You must include the winning option.
+      }
+    }
+    else {
+      message $chan $user($nick) -> A bet must be opened before it is closed.
+    }
+  }
+}
+
+on *:text:!bet *:#: {
+  if ($access($nick) <= $BetLevel) {
+    if ($readini(Bet.ini, $chan, Status) = Open) {
+      if ($2 isnum) && ($3 isnum) {
+        if ($readini(Points.ini,$chan,$nick) < $readini(Bet.ini,$chan,Multiply)) {
+          message $chan $user($nick) -> You do not have enough $points bet this amount.
+        }
+        else {
+          writeini -n Bet.ini $+($chan,.,Option) $nick $2
+          writeini -n Bet.ini $+($chan,.,Points) $nick $3
+          if (!$($+(%,betmessage.,$chan),2)) { 
+            set -u30 $+(%,betmessage.,$chan) ON
+            message $chan One or more bets counted.
+          }
+        }
+      }
+    }
+  }
+}
+
+alias BetWin {
+  writeini -n PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + $calc($readini(Bet.ini,$chan,Multiply)) * $readini(Bet.ini,$+($chan,.,Points),$1))
+}
+
+alias BetLose {
+  writeini -n PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) - $readini(Bet.ini,$+($chan,.,Points),$1))
+}
+
+alias BetLevel {
+  return $iif($readini(Bet.ini,$chan,UL) != $null, $readini(Bet.ini,$chan,UL),800)
+}
