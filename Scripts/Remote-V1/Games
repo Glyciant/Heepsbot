@@ -1,0 +1,370 @@
+; Script Name: Games.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+;START: Love
+on *:text:!love &:#: {
+  if ($BotSetting(LoveOff) = $null) {
+    if ($access($nick) <= $lovelevel) {
+      if ($2 = $nick) {
+        message $chan Seriously $user($nick) $+ !?!?!?
+      }
+      elseif ($2 = $me) {
+        message $chan $user($nick) -> Bots do not understand love, but thanks! Kappa
+      }
+      elseif ($owner = $2) {
+        message $chan $2 loves everyone in chat!
+      }
+      else {
+        message $chan There is $rand(1,100) $+ % love between $user($nick) and $user($2) $+ !
+      }
+    }
+  }
+}
+
+on *:text:!set love on:#: {
+  if ($access($nick) <= 400) {
+    remini BotSettings.ini $chan LoveOff
+    message $chan $user($nick) -> Love test has been enabled.
+  }
+}
+
+on *:text:!set love off:#: {
+  if ($access($nick) <= 400) {
+    writeini -n BotSettings.ini $chan LoveOff .
+    message $chan $user($nick) -> Love test has been disabled.
+  }
+}
+
+alias lovelevel {
+  return $iif($readini(CommandLevels.ini,$chan,!love) != $null, $readini(CommandLevels.ini,$chan,!love), 800)
+}
+
+on *:text:!level !love &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !love $3
+      message $chan $user($nick) -> The command userlevel for !love has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+;END: Love
+;START: 8ball
+on *:text:!8Ball *:#:{
+  if ($BotSetting(8ballOff) = $null) {
+    if ($access($nick) <= $iif($readini(CommandLevels.ini,$chan,!8ball) != $null, $readini(CommandLevels.ini,$chan,!8ball), 800)) {
+      8ball $chan
+    }
+  }
+}
+on *:text:!set 8Ball*:#:{
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      remini BotSettings.ini $chan 8ballOff
+      message $chan $user($nick) -> 8Ball has been Enabled.
+    }
+    if ($3 = off) {
+      writeini -n BotSettings.ini $chan 8ballOff .
+      message $chan $user($nick) -> 8Ball has been Disabled.
+    }
+    else {
+      message $chan $user($nick) -> The 8ball feature is currently $iif($BotSetting(8ballOff) = $null, on.,off.)
+    }
+  }
+}
+
+alias 8ballLevel {
+  return $iif($readini(CommandLevels.ini,$chan,!8ball) != $null, $readini(CommandLevels.ini,$chan,!8ball), 800)
+}
+
+on *:text:!level !8ball &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !8ball $3
+      message $chan $user($nick) -> The command userlevel for !8ball has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+alias 8ball {
+  var %8ball = $rand(1,21)
+  if (%8Ball == 1)  message $1 I'm thinking yes!
+  if (%8Ball == 2)  message $1 Hell no! What were you thinking?!?!
+  if (%8Ball == 3)  message $1 Ask nicer please
+  if (%8Ball == 4)  message $1 I can't tell you that!
+  if (%8Ball == 5)  message $1 Maybe.
+  if (%8Ball == 6)  message $1 Definatly!
+  if (%8Ball == 7)  message $1 Ask another time
+  if (%8Ball == 8)  message $1 If you bow down to me. its a yes
+  if (%8Ball == 9)  message $1 Are you sure you want to ask me that?
+  if (%8Ball == 10)  message $1 Certainly not!
+  if (%8Ball == 11)  message $1 Most likely
+  if (%8Ball == 12)  message $1 Probly not. Sorry
+  if (%8Ball == 13)  message $1 Problably not dude
+  if (%8Ball == 14)  message $1 Signs pointing to yes!
+  if (%8Ball == 15)  message $1 So is it a deal? or no deal?
+  if (%8Ball == 16)  message $1 Im sorry, you are the weakest link, good bye
+  if (%8Ball == 17)  message $1 Ill answer you if you give me five bucks
+  if (%8Ball == 18)  message $1 Definantly NOT
+  if (%8Ball == 19)  message $1 Doubtfull.
+  if (%8Ball == 20)  message $1 A question I dont even have an answer to.
+  if (%8Ball == 21)  message $1 What kind of question is that?
+}
+;END: 8ball
+;START: Roulette
+on *:text:!roulette:#: {
+  if ($BotSetting(Rouletteoff) = $null) {
+    if ($access($nick) <= $roulettelevel) {
+      if ($readini(PointsUpdated.ini,$chan,$nick) < $iif($BotSetting(RouletteLose) != $null,$BotSetting(RouletteLose),10)) {
+        message $chan $user($nick) -> You do not have enough $points to use this command.
+      }
+      else {
+        set %roulette $rand(1,2)
+        ;set %roulette $rand(1,$iif($BotSetting(RouletteChance) != $null),$BotSetting(RouletteChance),2))
+        if (%roulette = 1) {
+          if ($access($nick) <= 500) {
+            message $chan $user($nick) pulls the trigger... BANG! The gun fires, but you are defended by your mod armour.
+          }
+          else {
+            message $chan $user($nick) pulls the trigger... BANG! The gun fires, you are killed instantly.
+            if ($BotSetting(RouletteTime) != Off) {
+              message $chan /timeout $nick $iif($BotSetting(RouletteTime) != $null,$BotSetting(RouletteTime),30)
+            }
+          }
+          writeini -n PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) - $iif($BotSetting(RouletteLose) != $null,$BotSetting(RouletteLose),10))
+        }
+        else {
+          message $chan $user($nick) pulls the trigger... CLICK! You survived this round.
+          writeini -n PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) + $iif($BotSetting(RouletteWin) != $null,$BotSetting(RouletteWin),10))
+        }
+      }
+    }
+  }
+}
+
+on *:text:!set roulette*:#:{
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      remini BotSettings.ini $chan RouletteOff
+      message $chan $user($nick) -> Roulette has been Enabled.
+    }
+    if ($3 = off) {
+      writeini -n BotSettings.ini $chan RouletteOff .
+      message $chan $user($nick) -> Roulette has been Disabled.
+    }
+    if ($3 = timeout) {
+      if ($4 = off) || ($4 = 0) {
+        writeini -n BotSettings.ini $chan RouletteTime Off
+      }
+      elseif ($4 isnum) {
+        writeini -n BotSettings.ini $chan RouletteTime $4
+      }
+    }
+    if ($3 = points) || ($3 = $points) {
+      if ($4 = win) {
+        if ($5 isnum) {
+          writeini -n BotSettings.ini $chan RouletteWin $5
+        }
+      }
+      if ($4 = lose) {
+        if ($5 isnum) {
+          writeini -n BotSettings.ini $chan RouletteLose $5
+        }
+      }
+    }
+  }
+}
+
+alias roulettelevel {
+  return $iif($readini(CommandLevels.ini,$chan,!roulette) != $null, $readini(CommandLevels.ini,$chan,!roulette), 800)
+}
+
+on *:text:!level !roulette &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !roulette $3
+      message $chan $user($nick) -> The command userlevel for !roulette has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+;END: Roulette
+;START: Seppuku
+on *:text:!seppuku:#: {
+  if ($BotSetting(Seppuku) = $null) {
+    if ($access($nick) <= $seppukulevel) {
+      if ($access($nick) <= 400) {
+        message $chan $user($nick) took their chances and survived!
+      }
+      else {
+        message $chan $user($nick) took their chances and failed!
+        message $chan /timeout $nick $iif($BotSetting(SeppukuTime) != $null,$BotSetting(SeppukuTime),60)
+      }
+    }
+  }
+}
+
+on *:text:!set seppuku *:#: { 
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      remini BotSettings.ini $chan Seppuku
+      message $chan $user($nick) -> Seppuku command enabled.
+    }
+    if ($3 = off) {
+      writeini -n BotSettings.ini $chan Seppuku .
+      message $chan $user($nick) -> Seppuku command disabled.
+    }
+    if ($3 = timeout) {
+      writeini -n BotSettings.ini $chan SeppukuTime .
+      message $chan $user($nick) -> Seppuku timeout length updated.
+    }
+  }
+}
+
+alias seppukulevel {
+  return $iif($readini(CommandLevels.ini,$chan,!seppuku) != $null, $readini(CommandLevels.ini,$chan,!seppuku), 800)
+}
+
+on *:text:!level !seppuku &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !seppuku $3
+      message $chan $user($nick) -> The command userlevel for !seppuku has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+;END: Seppuku
+;START: Bank Heist
+on *:join:#: {
+  if ($BotSetting(Heist) != $null) {
+    if ($nick == $me) {
+      $+(TimerHeist.,$chan 0 $iif($BotSetting(HeistTime) != $null,$BotSetting(HeistTime),1800) HeistOpen $chan)
+    }
+  }
+}
+
+on *:part:#: {
+  if ($nick == $me) {
+    if ($BotSetting(Heist) != $null) {
+      $+(TimerHeist.,$chan off)
+    }
+  }
+}
+
+alias HeistOpen {
+  writeini -n BotSettings.ini $1 HeistStatus Open
+  message $1 /me > The banks are open! Join the heist with !heist < $+ $points bet>.
+  $+(TimerHeistStart.,$1 1 60 HeistStart $1)
+}
+
+alias HeistStart {
+  set %heistpeople $ini(Heist.ini,$+($1,.Entries),0)
+  if (%heistpeople = 0) || (%heistpeople = $null)  {
+    message $1 /me > Nobody joined the heist. The banks are safe.
+  }
+  else {
+    if (%heistpeople >= 31) {
+      set %heistchances 66
+    }
+    elseif (%heistpeople < 31 && %people >= 20) {
+      set %heistchances $calc(33 + %heistpeople)
+    }
+    else {
+      set %heistchances $calc(33 + %heistpeople)
+    }
+    message $1 /me > Chances of success: %heistchances $+ % 
+    message $1 /me > People in heist: %heistpeople 
+    set %heistresult $rand(1,100)
+    set %heisti 1
+    if (%heistresult <= %heistchances) {
+      $+(timerheistmessage.,$1 1 10) message $1 /me > The heist was a success!
+      while (%heisti <= $ini(Heist.ini,$+($1,.,Entries),0)) {
+        set %heistuser $ini(Heist.ini,$+($1,.,Entries),%heisti)
+        writeini -n PointsUpdated.ini $1 %heistuser $calc($readini(PointsUpdated.ini,$1,%heistuser) + $calc($readini(Heist.ini,$+($1,.,Entries),%heistuser) * 2))
+        inc %heisti
+      }
+    }
+    else {
+      $+(timerheistmessage.,$1 1 10) message $1 /me > The heist was a failure!
+      while (%heisti <= $ini(Heist.ini,$+($1,.,Entries),0)) {
+        set %heistuser $ini(Heist.ini,$+($1,.,Entries),%heisti)
+        writeini -n PointsUpdated.ini $1 %heistuser $calc($readini(PointsUpdated.ini,$1,%heistuser) - $readini(Heist.ini,$+($1,.,Entries),%heistuser))
+        inc %heisti
+      }
+    }
+    unset %heistchances
+    unset %heisti
+    unset %heistresult
+    unset %heistuser
+    remini Heist.ini $+($1,.,Entries)
+    remini Heist.ini $1
+  }
+  unset %heistpeople
+}
+
+on *:text:!heist*:#: {
+  if ($BotSetting(Heist) != $null) {
+    if ($access($nick) <= $heistlevel) {
+      if ($readini(Points.ini,$chan,$nick) < $2) {
+        message $chan $user($nick) -> You do not have enough $points to use this command.
+      }
+      else {
+        writeini -n Heist.ini $+($chan,.,Entries) $nick $2
+        if (!$($+(%,heistflood.,$chan),2)) {
+          set -u30 $+(%,heistflood.,$chan) ON
+          message $chan /me > $user($nick) joined the heist!
+        }
+      }
+    }
+  }
+}
+
+on *:text:!set heist &:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Heist True
+      $+(TimerHeist.,$chan 0 $iif($BotSetting(HeistTime) != $null,$BotSetting(HeistTime),1800) HeistOpen)
+      message $chan $user($nick) -> Heist has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Heist
+      $+(TimerHeist.,$chan off)
+      message $chan $user($nick) -> Heist has been disabled.
+    }
+    if ($3 = frequency) {
+      if ($4 isnum) {
+        writeini -n BotSettings.ini $chan HeistTime $4
+        message $chan $user($nick) -> Heist freqency updated.
+      }
+    }
+  }
+}
+
+alias heistlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!heist) != $null, $readini(CommandLevels.ini,$chan,!heist), 800)
+}
+
+on *:text:!level !heist &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !heist $3
+      message $chan $user($nick) -> The command userlevel for !heist has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+;END: Bank Heist
