@@ -1,0 +1,52 @@
+; Script Name: Betting.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+; Usage (In Heepsbot's Channel): !command run [Channel] [Command]
+; The bot must be in [Channel] and Heepsbot's channel.
+
+on *:text:!set commandrun *:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan ComRun ON {
+        message $chan $user($nick) -> Moderators can now run this channel's commands remotely.
+      }
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan ComRun
+      message $chan $user($nick) -> Moderators can no longer run this channel's commands remotely.
+    }
+  }
+}
+
+on *:text:!command run *:#heepsbot: {
+  set %commandrunchan %hash $+ $3
+  if (!$4) {
+    message $chan $user($nick) -> Insufficient Parameters! Usage: !command run <channel> <command>
+  }
+  elseif ((%commandrunchan !ischan) || ($me !isop %commandrunchan)) {
+    message $chan $user($nick) -> I am not in or a moderator in $3 $+ 's channel.
+  }
+  else {
+    if (($nick isop %commandrunchan) || ($access($nick) <= 50)) {
+      if ($readini(CustomCommands.ini, %commandrunchan, $4) != $null) {
+        ComRun %commandrunchan $readini(CustomCommands.ini,%commandrunchan,$4) 
+        message $chan $user($nick) -> Command run successfully.
+      }
+      else {
+        message $chan $user($nick) -> Command $4 does not exist on $3 $+ 's channel.
+      }
+    }
+    else {
+      message $chan $user($nick) -> You are not a moderator in $3 $+ 's channel.
+    }
+  }
+}
+
+alias EchoMessage {
+  message $1 $2-
+}
+alias ComRun {
+  message $1 $remove($2-,^USER^,->,^TOUSER^,^NICK^,^CHAN^)
+}
