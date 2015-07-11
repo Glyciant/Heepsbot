@@ -1,0 +1,267 @@
+; Script Name: Levels.ini
+; Type: Required
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:join:#: {
+  tokenize 32 $strip($1-,burci)
+  tw_check_user_level $remove($chan,$chr(35)) $nick $chan
+  if ($tw_sub_button_check($remove($chan,$chr(35))) = Followers) {
+    writeini -n BotSettings.ini $chan 700Level Followers
+  }
+  else {
+    writeini -n BotSettings.ini $chan 700Level Subscribers
+  }
+}
+
+on *:part:#: {
+  remini UserLevels.ini $chan $nick
+}
+
+on *:text:!level *:#: {
+  if ($2 = editor) {
+    if ($access($nick) <= 300) {
+      if ($3 = add) {
+        if (!$4) { 
+          message $chan $user($nick) -> Please include a user to be added as an editor.
+        }
+        elseif ($istok($($+(%,editors.,$chan),2),$4,32)) { 
+          message $chan $user($nick) -> $capital($4) is already an editor. 
+        }
+        else {
+          set $+(%,editors.,$chan) $addtok($($+(%,editors.,$chan),2),$4,32)
+          message $chan $user($nick) -> $capital($4) is now an editor.
+        }
+      }
+      if ($3 = remove) {
+        if (!$4) { 
+          message $chan $user($nick) -> Please include a user to be removed as an editor.
+        }
+        elseif (!$istok($($+(%,editors.,$chan),2),$4,32)) { 
+          message $chan $user($nick) -> $capital($4) is not an editor. 
+        }
+        else {
+          set $+(%,editors.,$chan) $remtok($($+(%,editors.,$chan),2),$4,32)
+          message $chan $user($nick) -> $capital($4) is no longer an editor.
+        }
+      }
+    }
+  }
+  if ($2 = regular) {
+    if ($access($nick) <= 400) { {
+        if ($3 = add) {
+          if (!$4) { 
+            message $chan $user($nick) -> Please include a user to be added as a regular.
+          }
+          elseif ($istok($($+(%,regulars.,$chan),2),$4,32)) { 
+            message $chan $user($nick) -> $capital($4) is already a regular. 
+          }
+          else {
+            set $+(%,regulars.,$chan) $addtok($($+(%,regulars.,$chan),2),$4,32)
+            message $chan $user($nick) -> $capital($4) is now a regular.
+          }
+        }
+        if ($3 = remove) {
+          if (!$4) { 
+            message $chan $user($nick) -> Please include a user to be removed as a regular.
+          }
+          elseif (!$istok($($+(%,regulars.,$chan),2),$4,32)) { 
+            message $chan $user($nick) -> $capital($4) is not a regular. 
+          }
+          else {
+            set $+(%,regulars.,$chan) $remtok($($+(%,regulars.,$chan),2),$4,32)
+            message $chan $user($nick) -> $capital($4) is no longer a regular.
+          }
+        }
+      }
+    }
+    if ($2 = restrict) {
+      if ($access($nick) <= 500) {
+        if ($3 = add) {
+          if (!$4) { 
+            message $chan $user($nick) -> Please include a user to be restricted.
+          }
+          elseif ($istok($($+(%,restricted.,$chan),2),$4,32)) { 
+            message $chan $user($nick) -> $capital($4) is already restricted. 
+          }
+          else {
+            set $+(%,restricted.,$chan) $addtok($($+(%,restricted.,$chan),2),$4,32)
+            message $chan $user($nick) -> $capital($4) is now restricted.
+          }
+        }
+        if ($3 = remove) {
+          if (!$4) { 
+            message $chan $user($nick) -> Please include a user to be removed as restricted.
+          }
+          elseif (!$istok($($+(%,restricted.,$chan),2),$4,32)) { 
+            message $chan $user($nick) -> $capital($4) is not restricted. 
+          }
+          else {
+            set $+(%,restricted.,$chan) $remtok($($+(%,restricted.,$chan),2),$4,32)
+            message $chan $user($nick) -> $capital($4) is no longer restricted.
+          }
+        }
+      }
+    }
+  }
+}
+
+on *:text:!lookup*:#: {
+  if ($access($nick) <= 400) {
+    if ($2) {
+      tw_check_user_level $remove($chan,$chr(35)) $2 $chan
+      tw_check_follow_user_silent $remove($chan,$chr(35)) $2 $chan
+      message $chan $user($nick) -> $2 $+ 's userlevel is $access($2) $+ .
+    }
+    else {
+      if ($readini(userlevels.ini, Global, $nick) = $null) {
+        tw_check_user_level $remove($chan,$chr(35)) $nick $chan
+      }
+      if ($readini(userlevels.ini, Global, $nick) = $null) {
+        tw_check_follow_user_silent $remove($chan,$chr(35)) $nick $chan
+      }
+      message $chan $user($nick) -> Your userlevel is $access($nick) $+ .
+    }
+  }
+}
+
+on *:text:!userlevel:#: {
+  message $chan $user($nick) -> Your userlevel is $access($nick) $+ .
+}
+
+on *:text:*:#: {
+  if ($readini(BotSettings.ini,$chan,700Level) = Followers) {
+    tw_check_follow_user_silent $owner $nick
+  }
+  elseif ($readini(BotSettings.ini,$chan,700Level) = Subscribers) {
+  }
+}
+
+alias Level_Staff {
+  writeini -n userlevels.ini Global $1 100
+}
+
+alias Level_Admin {
+  writeini -n userlevels.ini Global $1 200
+}
+
+alias Level_Global_Mod {
+  writeini -n userlevels.ini Global $1 250
+}
+
+alias Level_User {
+  if ($readini(userlevels.ini, Global, $1) != $null) {
+    remini userlevels.ini Global $1
+  }
+}
+
+alias access {
+  if ($1 = heep123) {
+    return 1
+  }
+  elseif ($1 = %master) {
+    return 5
+  }
+  elseif ($istok(%admins,$1,32)) {
+    return 50
+  }
+  elseif ($readini(UserLevels.ini,Global,$nick) != $null) {
+    return $readini(UserLevels.ini,Global,$nick)
+  }
+  elseif ($1 = $iif($2,$2,$mid(#,2-))) {
+    return 300
+  }
+  elseif ($istok($($+(%,editors.,$chan),2),$1,32)) {
+    return 400 
+  }
+  elseif ($istok($($+(%,restricted.,$chan),2),$1,32)) {
+    return 900
+  }
+  elseif ($1 isop #) {
+    return 500
+  }
+  elseif ($istok($($+(%,regulars.,$chan),2),$1,32)) {
+    return 600
+  }
+  elseif ($readini(UserLevels.ini,$chan,$1) != $null) {
+    return 700
+  }
+  else {
+    return 800
+  }
+}
+
+alias access_api {
+  set %u https://api.twitch.tv/kraken/users/ $+ $1  
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  if (%JSONError) { set %error  1 | goto end | return }
+  set %accesstype $json(%v,type)
+  :end
+  if (%error) { goto end2 }
+  if (%status = staff) { return 100 }
+  elseif (%status = admin) { return 200 }
+  elseif (%status = global_mod) { return 250 }
+  elseif (!%status) { return False }
+  unset %accesstype
+  :end2
+  JSONClose %v
+  unset %error
+}
+
+alias tw_check_user_level {
+  set %u https://api.twitch.tv/kraken/users/ $+ $2  
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  if (%JSONError) { set %error  1 | goto end | return }
+  set %status $json(%v,type) 
+  :end
+  if (%error) { goto end2 }
+  if (%status = staff) { Level_Staff $2 }
+  elseif (%status = admin) { Level_Admin $2 }
+  elseif (%status = global_mod) { Level_Global_Mod $2 }
+  elseif (%status = user) { Level_User $2 }
+  :end2
+  JSONClose %v
+  unset %error
+  unset %v
+  unset %u
+}
+
+alias tw_check_follow_user_silent {
+  if (!$1) { return }
+  set %u https://api.twitch.tv/kraken/users/ $+ $2 $+ /follows/channels/ $+ $1 $+ ?limit=1&nocache= $+ $ticks
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  if (%JSONError) { set %error 1 | goto end | return }
+  set %fc $json(%v,error)
+  if (%fc) { 
+    set %message $json(%v,message) 
+    if (is not following isin %message) { set %status 0 }
+  }
+  :end
+  var %status = $json(%v,created_at)
+  if (%status) { writeini -n userlevels.ini $chan $2 700 }
+  elseif (!%status) { remini userlevels.ini $chan $2 }
+  :end2
+  JSONClose %v
+  unset %v
+  unset %u
+}
+
+alias subbutton {
+  echo $tw_sub_button_check($1)
+}
+
+alias tw_sub_button_check {
+  if (!$1) { return }
+  set %u http://api.twitch.tv/api/channels/ $+ $1 $+ /product?on_site=1
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  set %subbuttonresult $json(%v,name)
+  if (%subbuttonresult = $null) { return Followers }
+  elseif (%subbuttonresult != $null) { return Subscribers }
+  JSONClose %v
+  unset %v
+  unset %u
+}
