@@ -1,0 +1,94 @@
+; Script Name: Tweet.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!set tweet on*:#: {
+  if ($access($nick) <= 400) {
+    timertweetstart
+    message $chan $user($nick) -> Tweet Timer has been started.
+  }
+}
+
+on *:text:!set tweet off*:#: {
+  if ($access($nick) <= 400) {
+    timertweetstop
+    message $chan $user($nick) -> Tweet Timer has been stopped.
+  }
+}
+
+on *:text:!set tweet frequency*:#: {
+  if ($access($nick) <= 400) {
+    if ($4 isnum) {
+      writeini -n Tweet.ini $chan Frequency $4
+      message $chan $user($nick) -> Tweet Timer will now be shown once every $4 seconds.
+      if ($readini(Tweet.ini, $chan, TimerStatus) = ON) {
+        timertweetstop
+        timertweetstart
+      }
+    }
+  }
+}
+
+on *:text:!set tweet timermessage *:#: {
+  if ($access($nick) <= 400) {
+    writeini -n Tweet.ini $chan TimerMessage $4-
+    message $chan $user($nick) -> The tweet timer message has been updated.
+  }
+}
+
+on *:text:!set tweet commandmessage *:#: {
+  if ($access($nick) <= 400) {
+    writeini -n Tweet.ini $chan CommandMessage $4-
+    message $chan $user($nick) -> The tweet timer message has been updated.
+  }
+}
+
+on *:text:!tweet status*:#: {
+  if ($access($nick) <= $tweetlevel)  {
+    message $chan $user($nick) -> The tweet timer is currently $readini(Tweet.ini, $chan, TimerStatus) $+ .
+  }
+}
+
+on *:text:!tweet:#: {
+  if ($access($nick) <= $tweetlevel) {
+    message $chan $iif($readini(Tweet.ini, $chan, CommandMessage) != $null, $readini(Tweet.ini, $chan, CommandMessage),Please interact with this tweet to raise awareness of the stream:) $iif($readini(Tweet.ini, $chan, Link) != $null, $readini(Tweet.ini, $chan, Link), [Tweet Not Found])
+  }
+}
+
+on *:text:!set tweet link *:#: {
+  if ($access($nick) <= 400) {
+    writeini -n Tweet.ini $chan Link $4
+    message $chan $user($nick) -> The tweet link has been updated.
+    if ($readini(Tweet.ini, $chan, TimerStatus) = ON) {
+      timertweetstop
+      timertweetstart
+    }
+  }
+}
+
+alias timertweetstart {
+  writeini -n Tweet.ini $chan TimerStatus on
+  /timertweet 0 $iif($readini(Tweet.ini, $chan, Frequency) != $null, $readini(Tweet.ini, $chan, Frequency), 600) message $chan $iif($readini(Tweet.ini, $chan, TimerMessage) != $null, $readini(Tweet.ini, $chan, TimerMessage),Please interact with this tweet to raise awareness of the stream:) $iif($readini(Tweet.ini, $chan, Link) != $null, $readini(Tweet.ini, $chan, Link), [Tweet Not Found])
+}
+
+alias timertweetstop {
+  writeini -n Tweet.ini $chan TimerStatus off
+  /timertweet off
+}
+
+alias tweetlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!tweet) != $null, $readini(CommandLevels.ini,$chan,!tweet), 800)
+}
+
+on *:text:!level !tweet &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !tweet $3
+      message $chan $user($nick) -> The command userlevel for !tweet has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
