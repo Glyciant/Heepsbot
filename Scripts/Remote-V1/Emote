@@ -1,0 +1,169 @@
+; Script Name: Emote.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!emote &:#: {
+  if ($BotSetting(EmoteCom) = $null) {
+    if ($access($nick) <= $emotecomlevel) {
+      Emote $chan $2
+    }
+  }
+}
+
+on *:text:!set emote *:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = all) {
+      remini BotSettings.ini $chan EmoteCom
+      message $chan $user($nick) -> The !emote command has been enabled.
+    }
+    if ($3 = off) {
+      writeini -n BotSettings.ini $chan EmoteCom Off
+      message $chan $user($nick) -> The !emote command has been disabled.
+    }
+  }
+}
+
+alias emotecomlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!emote) != $null, $readini(CommandLevels.ini,$chan,!emote), 800)
+}
+
+on *:text:!level !emote &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !emote $3
+      message $chan $user($nick) -> The command userlevel for !emote has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+on *:text:!opemote &:#: {
+  if ($BotSetting(OpEmoteCom) = $null) {
+    if ($access($nick) <= $opemotecomlevel) {
+      OPEmote $chan $2
+    }
+  }
+}
+
+on *:text:!set opemote *:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = all) {
+      remini BotSettings.ini $chan OpEmoteCom
+      message $chan $user($nick) -> All users can now use the !opemote command.
+    }
+    if ($3 = off) {
+      writeini -n BotSettings.ini $chan OpEmoteCom Off    
+      message $chan $user($nick) -> Nobody can now use the !opemote command. 
+    }
+  }
+}
+
+alias opemotecomlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!opemote) != $null, $readini(CommandLevels.ini,$chan,!opemote), 500)
+}
+
+on *:text:!level !opemote &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !opemote $3
+      message $chan $user($nick) -> The command userlevel for !opemote has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+alias Emote {
+  if ((!$1) || (!$2)) { return }
+  message $1 $2 $2 $2 $2 $2 $2
+}
+
+alias OPEmote {
+  if ((!$1) || (!$2)) { return }
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+  message $1 $2 $2 $2 $2 $2 $2
+}
+
+on *:join:#: {
+  if ($nick == $me) {
+    if ($($+(%,emotecount.,$chan),2)) {
+      timerkpmtime 0 60 writeini -n BotSettings.ini $chan EmoteCountTime $calc($BotSetting(EmoteCountTime) + 1)
+      timerkpm 0 60 writeini -n BotSettings.ini $chan EmoteCountPM $round($calc($BotSetting(EmoteCountNum) / $BotSetting(EmoteCountTime)),3)
+    }
+  }
+}
+
+on *:text:!emotecount:#: {
+  if ($BotSetting(EmoteCount) = $null) {
+    if ($access($nick) <= $emotecountlevel) {
+      message $chan There are $BotSetting(EmoteCountPM) $BotSetting(EmoteCountEmote) $+ s per minute on this channel.
+    }
+  }
+}
+
+on *:text:!emotecount reset:#: {
+  if ($access($nick) <= 400) {
+    remini BotSettings.ini $chan EmoteCountNum
+    remini BotSettings.ini $chan EmoteCountTime
+    remini BotSettings.ini $chan EmoteCountPM
+    message $chan $user($nick) -> The emote count has been reset.
+  }
+}
+
+on *:text:!set emotecount &:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      remini BotSettings.ini $chan EmoteCount
+      message $chan $user($nick) -> Emote count disabled.
+    }
+    if ($3 = off) {
+      writeini -n BotSettings.ini $chan EmoteCount .
+      message $chan $user($nick) -> Emote count enabled for $3 $+ .
+    }
+    else {
+      writeini -n BotSettings.ini $chan EmoteCountEmote $3
+      message $chan $user($nick) -> The $3 will now be counted.
+    }
+  }
+}
+
+on *:text:*:#: {
+  if ($BotSetting(EmoteCount) = $null) {
+    if ($iif($BotSetting(EmoteCountEmote) != $null,$BotSetting(EmoteCountEmote),Kappa) isin $1-) {
+      writeini -n BotSettings.ini $chan EmoteCountNum $calc($BotSetting(EmoteCountNum) + 1)
+    }
+  }
+}
+
+alias emotecountlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!emotecount) != $null, $readini(CommandLevels.ini,$chan,!emotecount), 500)
+}
+
+on *:text:!level !emotecount &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !emotecount $3
+      message $chan $user($nick) -> The command userlevel for !emotecount has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
