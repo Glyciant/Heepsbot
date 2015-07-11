@@ -1,0 +1,67 @@
+; Script Name: Record.ini
+; Type: Optional (Only Works if OnlineCheck.ini is loaded)
+; Credits - None
+; You may edit this script.
+
+on *:text:!record*:#: {
+  if ($access($nick) <= $recordlevel) {
+    if ($2 = followers) {
+      message $chan Follower Record: $iif($followerrecord = $null, 0, $followerrecord) $+ .
+    }
+    elseif ($2 = viewers) {
+      message $chan Viewer Record: $iif($viewerrecord = $null, 0, $viewerrecord) $+ .
+    }
+    elseif ($2 = subscribers) {
+      $iif($partnered($owner) = true, $+(|) Subscriber Record: $iif($subrecord = $null, 0, $subrecord) $+ ., This channel is not partnered, therefore nobody can subscribe.)
+    }
+    elseif (!$2) || ($2 = all) {
+      message $chan Viewer Record: $iif($viewerrecord = $null, 0, $viewerrecord) $+(|) Follower Record: $iif($followerrecord = $null, 0, $followerrecord) $iif($partnered($owner) = true, $+(|) Subscriber Record: $iif($subrecord = $null, 0, $subrecord) $+ ., $+ .)
+    }
+  }
+}
+
+alias recordlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!record) != $null, $readini(CommandLevels.ini,$chan,!record), 800)
+}
+
+on *:text:!level !record &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !record $3
+      message $chan $user($nick) -> The command userlevel for !record has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+alias partnered {
+  if (!$1) { return }
+  set %partneredlink https://api.twitch.tv/kraken/channels/ $+ $1
+  set %partneredtick twcf_ $+ $ticks
+  JSONOpen -ud %partneredtick %partneredlink
+  set %partnered $json(%partneredtick,partner) 
+  :end
+  if (%partnered = $true) { return true }
+  elseif (%partnered = $false) { return false }
+  :end2
+  JSONClose %partneredtick
+}
+
+
+alias partnertest {
+  echo $partnered($1)
+}
+
+alias viewerrecord {
+  return $BotSetting( ViewerRecord)
+}
+
+alias followerrecord {
+  return $BotSetting( FollowRecord)
+}
+
+alias subrecord {
+  return $BotSetting( SubRecord)
+}
