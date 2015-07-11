@@ -1,0 +1,251 @@
+; Script Name: ProtectSymbols.ini
+; Type: Optional
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:text:!set symbols*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Symbols ON
+      message $chan $user($nick) -> Symbols protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Symbols
+      message $chan $user($nick) -> Symbols protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan SymbolsMessage $4-
+      message $chan $user($nick) -> Symbols message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan SymbolsVisible
+        message $chan $user($nick) -> Symbols messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan SymbolsVisible .
+        message $chan $user($nick) -> Symbols messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(SymbolsLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan SymbolsShort $4
+        message $chan $user($nick) -> The Symbols short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(SymbolsShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan SymbolsLong $4
+        message $chan $user($nick) -> The Symbols long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(SymbolsMin) = $null) {
+          writeini -n BotSettings.ini $chan SymbolsMax Purge
+          message $chan $user($nick) -> The Symbols maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(SymbolsMin) = Ban) || ($BotSetting(SymbolsMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan SymbolsMax
+          message $chan $user($nick) -> The Symbols maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(SymbolsMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan SymbolsMax Long
+          message $chan $user($nick) -> The Symbols maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan SymbolsMax Ban
+        message $chan $user($nick) -> The Symbols maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        remini BotSettings.ini $chan SymbolsMin
+        message $chan $user($nick) -> The Symbols minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(SymbolsMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan SymbolsMin Short
+          message $chan $user($nick) -> The Symbols minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(SymbolsMax) = Purge) || (($BotSetting(SymbolsMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan SymbolsMin Long
+          message $chan $user($nick) -> The Symbols minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(SymbolsMax) = Ban) {
+          writeini -n BotSettings.ini $chan SymbolsMin Ban
+          message $chan $user($nick) -> The Symbols minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan SymbolsWarning
+        message $chan $user($nick) -> The Symbols ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan SymbolsWarning .
+        message $chan $user($nick) -> The Symbols ban warning was disabled.
+      }
+    }
+    elseif ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan SymbolsSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    if ($3 = allowed) {
+      if (($4 !isnum) {
+        writeini -n BotSettings.ini $chan AllowedSymbols $4
+        message $chan $user($nick) -> The number of allowed symbols was updated.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a number.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Symbols Protection is currently $iif($BotSetting(Symbols) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!forget symbols *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,Symbolsban.,$chan,.,$3)
+    unset $+(%,Symbolsbanwarning.,$chan,.,$3)
+    unset $+(%,Symbolsshorttimeout.,$chan,.,$3)
+    unset $+(%,Symbolslongtimeout.,$chan,.,$3)
+    unset $+(%,Symbolspurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for Symbols.
+  }
+}
+
+on *:text:*:#: {
+  if ($BotSetting(Symbols) != $null) {
+    set %symbolsregex /[-!$%^&*()_+|~=`{}\[\]:";'<>?,.\/]/g
+    if ($regex($1-,%symbolsregex) > $iif($BotSetting(AllowedSymbols) != $null,$BotSettings(AllowedSymbols),6)) {
+      if ($access($nick) <= $iif($BotSetting(SymbolsSafe) != $null,$BotSetting(SymbolsSafe),600)) { return }
+      if ($BotSetting(SymbolsWarning) = $null) && ($($+(%,Symbolslongtimeout.,$chan,.,$nick),2)) {
+        Symbolsban $nick
+      }
+      elseif ($($+(%,Symbolslongtimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(SymbolsMax) = Long) {
+          Symbolslong $nick
+        }
+        elseif ($BotSetting(SymbolsWarning) = $null) {
+          Symbolswarning $nick
+        }
+        else {
+          Symbolsban $nick
+        }
+      }
+      elseif ($($+(%,Symbolsshorttimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(SymbolsMax) = $null) {
+          Symbolsshort $nick
+        }
+        else {
+          Symbolslong $nick
+        }
+      }
+      elseif ($($+(%,Symbolspurge.,$chan,.,$nick),2)) {
+        if ($BotSetting(SymbolsMax) = Purge) {
+          Symbolspurge $nick
+        }
+        else {
+          Symbolsshort $nick
+        }
+      }
+      else {
+        if ($BotSetting(SymbolsMin) = Ban) {
+          Symbolsban $nick
+        }
+        elseif ($BotSetting(SymbolsMin) = Long) {
+          Symbolslong $nick
+        }
+        elseif ($BotSetting(SymbolsMin) = Short) {
+          Symbolsshort $nick
+        }
+        else {
+          Symbolspurge $nick
+        }
+      }
+    }
+  }
+}
+
+alias Symbolspurge {
+  set -u3600 $+(%,Symbolspurge.,$chan,.,$nick) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(SymbolsVisible) = $null) {
+    message $chan $iif($BotSetting(SymbolsMessage) != $null,$BotSetting(SymbolsMessage),Please don't spam symbols!) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias Symbolsshort {
+  set -u3600 $+(%,Symbolsshorttimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(SymbolsShort) != $null,$BotSetting(SymbolsShort),600)
+  if ($BotSetting(SymbolsVisible) = $null) {
+    message $chan $iif($BotSetting(SymbolsMessage) != $null,$BotSetting(SymbolsMessage),Please don't spam symbols!) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias Symbolslong {
+  set -u3600 $+(%,Symbolslongtimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(SymbolsLong) != $null,$BotSetting(SymbolsLong),2880)
+  if ($BotSetting(SymbolsVisible) = $null) {
+    message $chan $iif($BotSetting(SymbolsMessage) != $null,$BotSetting(SymbolsMessage),Please don't spam symbols!) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias Symbolswarning {
+  set -u3600 $+(%,Symbolsbanwarning.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(SymbolsLong) != $null,$BotSetting(SymbolsLong),2880)
+  if ($BotSetting(SymbolsVisible) = $null) {
+    message $chan $iif($BotSetting(SymbolsMessage) != $null,$BotSetting(SymbolsMessage),Please don't spam symbols!) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias Symbolsban {
+  set -u3600 $+(%,Symbolsban.,$chan,.,$nick) ON
+  message $chan /ban $1
+  if ($BotSetting(SymbolsVisible) = $null) {
+    message $chan $iif($BotSetting(SymbolsMessage) != $null,$BotSetting(SymbolsMessage),Please don't spam symbols!) ( $+ $user($1) $+ ) (Ban)
+  }
+}
