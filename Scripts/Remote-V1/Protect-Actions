@@ -1,0 +1,239 @@
+; Script Name: ProtectAction.ini
+; Type: Optional
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:text:!set actions*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Actions ON
+      message $chan $user($nick) -> Actions protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Actions
+      message $chan $user($nick) -> Actions protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan ActionsMessage $4-
+      message $chan $user($nick) -> Actions message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan ActionsVisible
+        message $chan $user($nick) -> Actions messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan ActionsVisible .
+        message $chan $user($nick) -> Actions messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(ActionsLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan ActionsShort $4
+        message $chan $user($nick) -> The actions short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(ActionsShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan ActionsLong $4
+        message $chan $user($nick) -> The actions long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(ActionsMin) = $null) {
+          writeini -n BotSettings.ini $chan ActionsMax Purge
+          message $chan $user($nick) -> The actions maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(ActionsMin) = Ban) || ($BotSetting(ActionsMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan ActionsMax
+          message $chan $user($nick) -> The actions maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(ActionsMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan ActionsMax Long
+          message $chan $user($nick) -> The actions maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan ActionsMax Ban
+        message $chan $user($nick) -> The actions maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        remini BotSettings.ini $chan ActionsMin
+        message $chan $user($nick) -> The actions minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(ActionsMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan ActionsMin Short
+          message $chan $user($nick) -> The actions minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(ActionsMax) = Purge) || (($BotSetting(ActionsMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan ActionsMin Long
+          message $chan $user($nick) -> The actions minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(ActionsMax) = Ban) {
+          writeini -n BotSettings.ini $chan ActionsMin Ban
+          message $chan $user($nick) -> The actions minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan ActionsWarning
+        message $chan $user($nick) -> The actions ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan ActionsWarning .
+        message $chan $user($nick) -> The actions ban warning was disabled.
+      }
+    }
+    elseif ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan ActionsSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Actions Protection is currently $iif($BotSetting(Actions) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!forget actions *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,Actionsban.,$chan,.,$3)
+    unset $+(%,Actionsbanwarning.,$chan,.,$3)
+    unset $+(%,Actionsshorttimeout.,$chan,.,$3)
+    unset $+(%,Actionslongtimeout.,$chan,.,$3)
+    unset $+(%,Actionspurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for actions.
+  }
+}
+
+on *:action:*:#:{
+  if ($BotSetting(Actions) != $null) {
+    if ($access($nick) <= $iif($BotSetting(ActionsSafe) != $null,$BotSetting(ActionsSafe),600)) { return }
+    if ($BotSetting(ActionsWarning) = $null) && ($($+(%,Actionslongtimeout.,$chan,.,$nick),2)) {
+      Actionsban $nick
+    }
+    elseif ($($+(%,Actionslongtimeout.,$chan,.,$nick),2)) {
+      if ($BotSetting(ActionsMax) = Long) {
+        Actionslong $nick
+      }
+      elseif ($BotSetting(ActionsWarning) = $null) {
+        Actionswarning $nick
+      }
+      else {
+        Actionsban $nick
+      }
+    }
+    elseif ($($+(%,Actionsshorttimeout.,$chan,.,$nick),2)) {
+      if ($BotSetting(ActionsMax) = $null) {
+        Actionsshort $nick
+      }
+      else {
+        Actionslong $nick
+      }
+    }
+    elseif ($($+(%,Actionspurge.,$chan,.,$nick),2)) {
+      if ($BotSetting(ActionsMax) = Purge) {
+        Actionspurge $nick
+      }
+      else {
+        Actionsshort $nick
+      }
+    }
+    else {
+      if ($BotSetting(ActionsMin) = Ban) {
+        Actionsban $nick
+      }
+      elseif ($BotSetting(ActionsMin) = Long) {
+        Actionslong $nick
+      }
+      elseif ($BotSetting(ActionsMin) = Short) {
+        Actionsshort $nick
+      }
+      else {
+        Actionspurge $nick
+      }
+    }
+  }
+}
+
+alias Actionspurge {
+  set -u3600 $+(%,Actionspurge.,$chan,.,$nick) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(ActionsVisible) = $null) {
+    message $chan $iif($BotSetting(ActionsMessage) != $null,$BotSetting(ActionsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias Actionsshort {
+  set -u3600 $+(%,Actionsshorttimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(ActionsShort) != $null,$BotSetting(ActionsShort),600)
+  if ($BotSetting(ActionsVisible) = $null) {
+    message $chan $iif($BotSetting(ActionsMessage) != $null,$BotSetting(ActionsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias Actionslong {
+  set -u3600 $+(%,Actionslongtimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(ActionsLong) != $null,$BotSetting(ActionsLong),2880)
+  if ($BotSetting(ActionsVisible) = $null) {
+    message $chan $iif($BotSetting(ActionsMessage) != $null,$BotSetting(ActionsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias Actionswarning {
+  set -u3600 $+(%,Actionsbanwarning.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(ActionsLong) != $null,$BotSetting(ActionsLong),2880)
+  if ($BotSetting(ActionsVisible) = $null) {
+    message $chan $iif($BotSetting(ActionsMessage) != $null,$BotSetting(ActionsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias Actionsban {
+  set -u3600 $+(%,Actionsban.,$chan,.,$nick) ON
+  message $chan /ban $1
+  if ($BotSetting(ActionsVisible) = $null) {
+    message $chan $iif($BotSetting(ActionsMessage) != $null,$BotSetting(ActionsMessage),Please don't use coloured text!) ( $+ $user($1) $+ ) (Ban)
+  }
+}
