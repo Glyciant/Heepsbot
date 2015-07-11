@@ -1,0 +1,317 @@
+; Script Name: ApiLookup.ini
+; Type: Optional
+; Credits - None
+; It is not recommended that you do not modify this script.
+
+on *:text:!fake*:#: {
+  if ($access($nick) <= $apilevel($1)) {
+    tokenize 32 $strip($1-,burci)
+    tw_check_fake $iif(!$2,$capital($remove($chan,$chr(35))),$2) $nick $chan
+  }
+}
+
+alias tw_check_fake {
+  if (!$1) { return }
+  set $+(%,fakelink.,$1) https://api.twitch.tv/kraken/streams/ $+ $1
+  set $+(%,faketicks.,$1) twcf_ $+ $ticks
+  JSONOpen -ud $($+(%,faketicks.,$1),2) $($+(%,fakelink.,$1),2)
+  set $+(%,fakecheck.,$1) $json($($+(%,faketicks.,$1),2),stream) 
+  if ($($+(%,fakecheck.,$1),2) = $null) {
+    message $3 $user($nick) -> $1 is offline.
+    unset $+(%,fakecheck.,$1)
+    unset $+(%,fakelink.,$1)
+    unset $+(%,fakeliveticks.,$1)
+    return
+  }
+  elseif ($($+(%,fakecheck.,$1),2) isnum) {
+    set $+(%,fakecheck.,$1) $json($($+(%,faketicks.,$1),2),stream,viewers)
+  }
+  JSONClose $($+(%,faketicks.,$1),2)
+  set $+(%,fakelink.,$1) http://tmi.twitch.tv/group/user/ $+ $lower($1) $+ /chatters
+  set $+(%,faketicks.,$1) twcf_ $+ $ticks
+  JSONOpen -ud $($+(%,faketicks.,$1),2) $($+(%,fakelink.,$1),2)
+  set $+(%,fakecheck2.,$1) $json($($+(%,faketicks.,$1),2),chatter_count) 
+  set $+(%,fakechance.,$1) $calc($($+(%,fakecheck2.,$1),2) / $($+(%,fakecheck.,$1),2))
+  set $+(%,fakediffer.,$1) $calc($($+(%,fakecheck.,$1),2) - $($+(%,fakecheck2.,$1),2))
+  if ($($+(%,fakechance.,$1),2) >= 1) { set $+(%,fakeover.,$1) Extremely Unlikely (More Chatters than Viewers) }
+  elseif ($($+(%,fakechance.,$1),2) isnum 0.7-1) { set $+(%,fakeover.,$1) Very Unlikely }
+  elseif ($($+(%,fakechance.,$1),2) isnum 0.4-0.7) { set $+(%,fakeover.,$1) Unlikely }
+  elseif ($($+(%,fakechance.,$1),2) isnum 0.2-0.4) { set $+(%,fakeover.,$1) Likely }
+  elseif ($($+(%,fakechance.,$1),2) >= 0.2) { 2set $+(%,fakeover.,$1) Very Likely }
+  else { set $+(%,fakeover.,$1) Unknown }
+  message $3 Statistics for $1 $+ : Viewers: $($+(%,fakecheck.,$1),2) $+ , Chatters: $($+(%,fakecheck2.,$1),2) $+ ; Difference: $($+(%,fakediffer.,$1),2) $+ , Viewbot Chance: $($+(%,fakeover.,$1),2)
+  message $3 Suspicious of the channel? Report it! http://goo.gl/iBh0vU
+  unset $+(%,fakecheck.,$1)
+  unset $+(%,fakeover.,$1)
+  unset $+(%,fakecheck2.,$1)
+  unset $+(%,fakechance.,$1)
+  unset $+(%,fakediffer.,$1)
+  unset $+(%,fakelink.,$1)
+  unset $+(%,faketicks.,$1)
+}
+
+on *:text:!followers:#: {
+  if ($access($nick) <= $apilevel($1)) {
+    tokenize 32 $strip($1-,burci)
+    tw_check_follow_total $remove($chan,$chr(35)) $nick $chan
+  }
+}
+
+alias tw_check_follow_total {
+  if (!$1) { return }
+  set %u https://api.twitch.tv/kraken/channels/ $+ $1
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  set %message $json(%v,followers) 
+  if (%message isnum) { set %status NoError }
+  :end
+  if (!%status) { message $3 Error: Could not find follower total for $capital($1) $+ . }
+  elseif (%status) { message $3 $capital($1) has %message followers $+ . }
+  :end2
+  JSONClose %v
+  unset %v
+  unset %message
+  unset %u
+}
+
+on *:text:!following:#: {
+  if ($access($nick) <= $apilevel($1)) {
+    tokenize 32 $strip($1-,burci)
+    tw_check_following_total $remove($chan,$chr(35)) $nick $chan
+  }
+}
+
+alias tw_check_following_total {
+  if (!$1) { return }
+  set %u https://api.twitch.tv/kraken/users/ $+ $1 $+ /follows/channels/
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  set %message $json(%v,_total) 
+  if (%message isnum) { set %status NoError }
+  :end
+  if (!%status) { message $3 Error: Could not find follower total for $capital($1) $+ . }
+  elseif (%status) { message $3 $capital($1) is following %message users.  }
+  :end2
+  JSONClose %v
+  unset %v
+  unset %message
+  unset %status
+  unset %u
+}
+
+on *:text:!partnership:#: {
+  if ($access($nick) <= $apilevel($1)) {
+    tokenize 32 $strip($1-,burci)
+    tw_check_partner $remove($chan,$chr(35)) $nick $chan
+  }
+}
+
+alias tw_check_partner {
+  if (!$1) { return }
+  set %u https://api.twitch.tv/kraken/channels/ $+ $1
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  set %message $json(%v,partner) 
+  :end
+  if (%message = $true) { message $3 $capital($1) is a partnered Twitch channel. }
+  elseif (%message = $false) { message $3 $capital($1) is not a partnered Twitch channel. }
+  else { message $3 $user($nick) -> Could not find partnership information for $capital($1) $+ . }
+  :end2
+  JSONClose %v
+  unset %v
+  unset %message
+  unset %u
+}
+
+on *:text:!title:#: {
+  if ($access($nick) <= $apilevel($1)) {
+    tokenize 32 $strip($1-,burci)
+    tw_check_status $remove($chan,$chr(35)) $nick $chan
+  }
+}
+
+alias tw_check_status {
+  if (!$1) { return }
+  set %u https://api.twitch.tv/kraken/channels/ $+ $1
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  set %message $json(%v,status) 
+  if (%message != $null) { set %status NoError }
+  :end
+  if (!%status) { message $3 There is currently no stream title set. }
+  elseif (%status) { message $3 Current Stream Title: %message }
+  :end2
+  JSONClose %v
+  unset %v
+  unset %u
+  unset %message
+  unset %status
+}
+
+on *:text:!game:#: {
+  if ($access($nick) <= $apilevel($1)) {
+    tokenize 32 $strip($1-,burci)
+    tw_check_game $remove($chan,$chr(35)) $nick $chan
+  }
+}
+
+alias tw_check_game {
+  if (!$1) { return }
+  set %u https://api.twitch.tv/kraken/channels/ $+ $1
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  set %message $json(%v,game) 
+  if (%message = $null) { set %status Error }
+  :end
+  if (%status) { message $3 There is currently no stream game set. }
+  elseif (!%status) { message $3 Current Stream Game: %message }
+  :end2
+  JSONClose %v
+  unset %v
+  unset %message
+  unset %u
+}
+
+on *:text:!viewers:#: {
+  if ($access($nick) <= $apilevel($1)) {
+    tokenize 32 $strip($1-,burci)
+    tw_check_viewers $remove($chan,$chr(35)) $nick $chan
+  }
+}
+
+alias tw_check_viewers {
+  if (!$1) { return }
+  set %u https://api.twitch.tv/kraken/streams/ $+ $1
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  set %message $json(%v,stream,viewers) 
+  :end
+  if (%message !isnum) { message $3 Error: Could not find viewer total for $capital($1) $+ . }
+  elseif (%message isnum) { message $3 There are currently %message people watching $capital($1) $+ . }
+  :end2
+  JSONClose %v
+  unset %v
+  unset %u
+  unset %message
+}
+
+on *:text:!emotes:#: {
+  if ($access($nick) <= $iif($readini(CommandLevels.ini,$chan,$1) != $null, $readini(CommandLevels.ini,$chan,$1), 500)) {
+    tokenize 32 $strip($1-,burci)
+    tw_check_emotes $remove($chan,$chr(35)) $nick $chan
+  }
+}
+
+alias tw_check_emotes {
+  if (!$1) { return }
+  set %m 0
+  set %u https://api.twitch.tv/kraken/chat/ $+ $1 $+ /emoticons
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  set %message $json(%v,emoticons,%m,subscriber_only) 
+  :end
+  if (%message = $false) { message $3 $capital($1) does not have any subscriber emotes. }
+  elseif (%message = $true) { 
+    set %emotes $json(%v,emoticons,%m,regex) $+ %comma
+    inc %m
+    while (%m != Stop_Emote_Check) {
+      if ($json(%v,emoticons,%m,subscriber_only) = $false) {
+        set %m Stop_Emote_Check
+      }
+      else {
+        set %emotes %emotes $json(%v,emoticons,%m,regex) $+ %comma
+        inc %m
+      }
+    }
+    set %emotes $left(%emotes,$calc($len(%emotes) - 1)) $+ .
+    message # Channel Emotes: %emotes
+    unset %emotes
+  }
+  unset %m
+  :end2
+  JSONClose %v
+  unset %v
+  unset %u
+  unset %m
+  unset %message
+}
+
+on *:text:!api*:#: {
+  if ($access($nick) <= 50) {
+    if ($3 = streams) || ($3 = channels) || ($3 = users) {
+      tokenize 32 $strip($1-,burci)
+      tw_check_api $2 $nick $chan $lower($3) $lower($4)
+    }
+  }
+}
+
+alias tw_check_api {
+  unset %status
+  if (!$1) { return }
+  set %u https://api.twitch.tv/kraken/ $+ $4 $+ / $+ $1
+  set %v twcf_ $+ $ticks
+  JSONOpen -ud %v %u
+  set %message $json(%v,$5) 
+  if (%message = $null) {
+    set %status Error
+    set %error $json(%v,error)
+    if (%error = $null) {
+      set %error No $5 found for $1 $+ .
+    }
+  }
+  if ($left(%message,1) = $+($)) {
+    set %message $capital($remove(%message,$chr(36)))
+  }
+  set %debugmessage message: $left(%message,1)
+  :end
+  if (%status) { message $3 $user($2) -> Error: %error }
+  elseif (!%status) { message $3 $user($2) -> Api Returns: $capital(%message) }
+  :end2
+  JSONClose %v
+  unset %status
+  unset %message
+  unset %error
+  unset %v
+  unset %u
+}
+
+on *:text:!level *:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      if ($2 = !followers) {
+        writeini -n CommandLevels.ini $chan !Followers $3
+      }
+      if ($2 = !following) {
+        writeini -n CommandLevels.ini $chan !Following $3
+      }
+      if ($2 = !title) {
+        writeini -n CommandLevels.ini $chan !Title $3
+      }
+      if ($2 = !game) {
+        writeini -n CommandLevels.ini $chan !Game $3
+      }
+      if ($2 = !partnership) {
+        writeini -n CommandLevels.ini $chan !Partnership $3
+      }
+      if ($2 = !viewers) {
+        writeini -n CommandLevels.ini $chan !Viewers $3
+      }
+      if ($2 = !chatters) {
+        writeini -n CommandLevels.ini $chan !Chatters $3
+      }
+      if ($2 = !emotes) {
+        writeini -n CommandLevels.ini $chan !Emotes $3
+      }
+      if ($2 = !fake) {
+        writeini -n CommandLevels.ini $chan !Fake $3
+      }
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+alias ApiLevel {
+  return $iif($readini(CommandLevels.ini,$chan,$1) != $null, $readini(CommandLevels.ini,$chan,$1), 800)
+}
