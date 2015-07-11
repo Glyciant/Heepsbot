@@ -1,0 +1,303 @@
+; Script Name: ProtectBannedUsernames.ini
+; Type: Optional
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:text:!set bannedusernames*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan BannedUsernames ON
+      message $chan $user($nick) -> Banned Usernames protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan BannedUsernames
+      message $chan $user($nick) -> Banned Usernames protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan BannedUsernamesMessage $4-
+      message $chan $user($nick) -> Banned Usernames message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan BannedUsernamesVisible
+        message $chan $user($nick) -> Banned Usernames messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan BannedUsernamesVisible .
+        message $chan $user($nick) -> Banned Usernames messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(BannedUsernamesLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan BannedUsernamesShort $4
+        message $chan $user($nick) -> The Banned Usernames short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(BannedUsernamesShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan BannedUsernamesLong $4
+        message $chan $user($nick) -> The Banned Usernames long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(BannedUsernamesMin) = $null) {
+          writeini -n BotSettings.ini $chan BannedUsernamesMax Purge
+          message $chan $user($nick) -> The Banned Usernames maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(BannedUsernamesMin) = Ban) || ($BotSetting(BannedUsernamesMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan BannedUsernamesMax
+          message $chan $user($nick) -> The Banned Usernames maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(BannedUsernamesMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan BannedUsernamesMax Long
+          message $chan $user($nick) -> The Banned Usernames maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan BannedUsernamesMax Ban
+        message $chan $user($nick) -> The Banned Usernames maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        writeini -n BotSettings.ini $chan BannedUsernamesMin Purge
+        message $chan $user($nick) -> The Banned Usernames minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(BannedUsernamesMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan BannedUsernamesMin Short
+          message $chan $user($nick) -> The Banned Usernames minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(BannedUsernamesMax) = Purge) || (($BotSetting(BannedUsernamesMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan BannedUsernamesMin Long
+          message $chan $user($nick) -> The Banned Usernames minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(BannedUsernamesMax) = Ban) {
+          remini BotSettings.ini $chan BannedUsernamesMin
+          message $chan $user($nick) -> The Banned Usernames minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan BannedUsernamesWarning
+        message $chan $user($nick) -> The Banned Usernames ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan BannedUsernamesWarning .
+        message $chan $user($nick) -> The Banned Usernames ban warning was disabled.
+      }
+    }
+    elseif ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan BannedUsernamesSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Banned Usernames Protection is currently $iif($BotSetting(BannedUsernames) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!forget BannedUsernames *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,BannedUsernamesban.,$chan,.,$3)
+    unset $+(%,BannedUsernamesbanwarning.,$chan,.,$3)
+    unset $+(%,BannedUsernamesshorttimeout.,$chan,.,$3)
+    unset $+(%,BannedUsernameslongtimeout.,$chan,.,$3)
+    unset $+(%,BannedUsernamespurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for using BannedUsernamesed words.
+  }
+}
+
+on *:text:!bannedusername add*:#: {
+  if ($access($nick) <= 400) {
+    if (!$3) { 
+      message $chan $user($nick) -> Please include a word to be added to the banned usernames.
+    }
+    elseif ($readini(BannedUsernames.ini,$chan,$3) != $null) { 
+      message $chan $user($nick) -> That word is already on the list. 
+    }
+    else {
+      message $chan $user($nick) -> That word is now banned in usernames.
+      writeini -n BannedUsernames.ini $chan $3 .
+    }
+  }
+}
+
+on *:text:!bannedusername remove*:#: {
+  if ($access($nick) <= 400) {
+    if (!$3) { 
+      message $chan $user($nick) -> Please include a word to be removed from the banned usernames.
+    }
+    elseif ($readini(BannedUsernames.ini,$chan,$3) = $null) { 
+      message $chan $user($nick) -> That word is not on the list.
+    }
+    else {
+      message $chan $user($nick) -> That word will no longer be banned in usernames.
+      remini BannedUsernames.ini $chan $3
+    }
+  }
+}
+
+on *:action:*:#:{
+  if ($BotSetting(BannedUsernames) != $null) {
+    set %bannedusernamesi 1
+    while (%bannedusernamesi <= $ini(BannedUsernames.ini,$chan,0)) {
+      if ($ini(BannedUsernames.ini,$chan,%bannedusernamesi) isin $nick) {
+        echo It's good!
+        ProtectBannedUsernames $nick
+        goto ProtectUsernamesEndLoopAction
+      }
+      else {
+        inc %bannedusernamesi
+      }
+    }
+    :ProtectUsernamesEndLoopAction
+    unset %bannedusernamesi
+  }
+}
+
+on *:text:*:#:{
+  if ($BotSetting(BannedUsernames) != $null) {
+    set %bannedusernamesi 1
+    while (%bannedusernamesi <= $ini(BannedUsernames.ini,$chan,0)) {
+      if ($ini(BannedUsernames.ini,$chan,%bannedusernamesi) isin $nick) {
+        echo It's good!
+        ProtectBannedUsernames $nick
+        goto ProtectUsernamesEndLoopText
+      }
+      else {
+        inc %bannedusernamesi
+      }
+    }
+    :ProtectUsernamesEndLoopText
+    unset %bannedusernamesi
+  }
+}
+
+alias ProtectBannedUsernames {
+  if ($access($1) <= $iif($BotSetting(BannedUsernamesSafe) != $null,$BotSetting(BannedUsernamesSafe),500)) { return }
+  if ($BotSetting(BannedUsernamesWarning) = $null) && ($($+(%,BannedUsernameslongtimeout.,$chan,.,$1),2)) {
+    BannedUsernamesban $1
+  }
+  elseif ($($+(%,BannedUsernameslongtimeout.,$chan,.,$1),2)) {
+    if ($BotSetting(BannedUsernamesMax) = Long) {
+      BannedUsernameslong $1
+    }
+    elseif ($BotSetting(BannedUsernamesWarning) = $null) {
+      BannedUsernameswarning $1
+    }
+    else {
+      BannedUsernamesban $1
+    }
+  }
+  elseif ($($+(%,BannedUsernamesshorttimeout.,$chan,.,$1),2)) {
+    if ($BotSetting(BannedUsernamesMax) = $null) {
+      BannedUsernamesshort $1
+    }
+    else {
+      BannedUsernameslong $1
+    }
+  }
+  elseif ($($+(%,BannedUsernamespurge.,$chan,.,$1),2)) {
+    if ($BotSetting(BannedUsernamesMax) = Purge) {
+      BannedUsernamespurge $1
+    }
+    else {
+      BannedUsernamesshort $1
+    }
+  }
+  else {
+    if ($BotSetting(BannedUsernamesMin) = Long) {
+      BannedUsernameslong $1
+    }
+    elseif ($BotSetting(BannedUsernamesMin) = Short) {
+      BannedUsernamesshort $1
+    }
+    elseif ($BotSetting(BannedUsernamesMin) = Purge) {
+      BannedUsernamespurge $1
+    }
+    else {
+      BannedUsernamesban $1
+    }
+  }
+}
+
+alias BannedUsernamespurge {
+  set -u3600 $+(%,BannedUsernamespurge.,$chan,.,$1) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(BannedUsernamesVisible) = $null) {
+    message $chan $iif($BotSetting(BannedUsernamesMessage) != $null,$BotSetting(BannedUsernamesMessage),Your username contains a banned word.) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias BannedUsernamesshort {
+  set -u3600 $+(%,BannedUsernamesshorttimeout.,$chan,.,$1) ON
+  message $chan /timeout $1 $iif($BotSetting(BannedUsernamesShort) != $null,$BotSetting(BannedUsernamesShort),600)
+  if ($BotSetting(BannedUsernamesVisible) = $null) {
+    message $chan $iif($BotSetting(BannedUsernamesMessage) != $null,$BotSetting(BannedUsernamesMessage),Your username contains a banned word.) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias BannedUsernameslong {
+  set -u3600 $+(%,BannedUsernameslongtimeout.,$chan,.,$1) ON
+  message $chan /timeout $1 $iif($BotSetting(BannedUsernamesLong) != $null,$BotSetting(BannedUsernamesLong),2880)
+  if ($BotSetting(BannedUsernamesVisible) = $null) {
+    message $chan $iif($BotSetting(BannedUsernamesMessage) != $null,$BotSetting(BannedUsernamesMessage),Your username contains a banned word.) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias BannedUsernameswarning {
+  set -u3600 $+(%,BannedUsernamesbanwarning.,$chan,.,$1) ON
+  message $chan /timeout $1 $iif($BotSetting(BannedUsernamesLong) != $null,$BotSetting(BannedUsernamesLong),2880)
+  if ($BotSetting(BannedUsernamesVisible) = $null) {
+    message $chan $iif($BotSetting(BannedUsernamesMessage) != $null,$BotSetting(BannedUsernamesMessage),Your username contains a banned word.) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias BannedUsernamesban {
+  set -u3600 $+(%,BannedUsernamesban.,$chan,.,$1) ON
+  message $chan /ban $1
+  if ($BotSetting(BannedUsernamesVisible) = $null) {
+    message $chan $iif($BotSetting(BannedUsernamesMessage) != $null,$BotSetting(BannedUsernamesMessage),Your username contains a banned word.) ( $+ $user($1) $+ ) (Ban)
+  }
+}
