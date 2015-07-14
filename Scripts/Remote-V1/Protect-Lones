@@ -1,0 +1,256 @@
+; Script Name: ProtectLones.ini
+; Type: Optional
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:text:!set lones*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Lones ON
+      message $chan $user($nick) -> Lones protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Lones
+      message $chan $user($nick) -> Lones protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan LonesMessage $4-
+      message $chan $user($nick) -> Lones message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan LonesVisible
+        message $chan $user($nick) -> Lones messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan LonesVisible .
+        message $chan $user($nick) -> Lones messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(LonesLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan LonesShort $4
+        message $chan $user($nick) -> The Lones short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(LonesShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan LonesLong $4
+        message $chan $user($nick) -> The Lones long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(LonesMin) = $null) {
+          writeini -n BotSettings.ini $chan LonesMax Purge
+          message $chan $user($nick) -> The lones maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(LonesMin) = Ban) || ($BotSetting(LonesMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan LonesMax
+          message $chan $user($nick) -> Thelones maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(LonesMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan LonesMax Long
+          message $chan $user($nick) -> The lones maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan LonesMax Ban
+        message $chan $user($nick) -> The lones maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        remini BotSettings.ini $chan LonesMin
+        message $chan $user($nick) -> The lones minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(LonesMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan LonesMin Short
+          message $chan $user($nick) -> The lones minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(LonesMax) = Purge) || (($BotSetting(LonesMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan LonesMin Long
+          message $chan $user($nick) -> The lones minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(LonesMax) = Ban) {
+          writeini -n BotSettings.ini $chan LonesMin Ban
+          message $chan $user($nick) -> The lones minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan LonesWarning
+        message $chan $user($nick) -> The lones ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan LonesWarning .
+        message $chan $user($nick) -> The lones ban warning was disabled.
+      }
+    }
+    elseif ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan LonesSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Lones Protection is currently $iif($BotSetting(Lones) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!forget lones *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,Lonesban.,$chan,.,$3)
+    unset $+(%,Lonesbanwarning.,$chan,.,$3)
+    unset $+(%,Lonesshorttimeout.,$chan,.,$3)
+    unset $+(%,Loneslongtimeout.,$chan,.,$3)
+    unset $+(%,Lonespurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for typing lone emotes.
+  }
+}
+
+on *:text:*:#:{
+  if ($BotSetting(Lones) != $null) {
+    if ($0 = 1) {
+      if ($tw_check_lone_emote($1) = True) {
+        if ($access($nick) <= $iif($BotSetting(LonesSafe) != $null,$BotSetting(LonesSafe),600)) { return }
+        if ($BotSetting(LonesWarning) = $null) && ($($+(%,Loneslongtimeout.,$chan,.,$nick),2)) {
+          Lonesban $nick
+        }
+        elseif ($($+(%,Loneslongtimeout.,$chan,.,$nick),2)) {
+          if ($BotSetting(LonesMax) = Long) {
+            Loneslong $nick
+          }
+          elseif ($BotSetting(LonesWarning) = $null) {
+            Loneswarning $nick
+          }
+          else {
+            Lonesban $nick
+          }
+        }
+        elseif ($($+(%,Lonesshorttimeout.,$chan,.,$nick),2)) {
+          if ($BotSetting(LonesMax) = $null) {
+            Lonesshort $nick
+          }
+          else {
+            Loneslong $nick
+          }
+        }
+        elseif ($($+(%,Lonespurge.,$chan,.,$nick),2)) {
+          if ($BotSetting(LonesMax) = Purge) {
+            Lonespurge $nick
+          }
+          else {
+            Lonesshort $nick
+          }
+        }
+        else {
+          if ($BotSetting(LonesMin) = Ban) {
+            Lonesban $nick
+          }
+          elseif ($BotSetting(LonesMin) = Long) {
+            Loneslong $nick
+          }
+          elseif ($BotSetting(LonesMin) = Short) {
+            Lonesshort $nick
+          }
+          else {
+            Lonespurge $nick
+          }
+        }
+      }
+    }
+  }
+}
+
+alias Lonespurge {
+  set -u3600 $+(%,Lonespurge.,$chan,.,$nick) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(LonesVisible) = $null) {
+    message $chan $iif($BotSetting(LonesMessage) != $null,$BotSetting(LonesMessage),Please don't use lone emotes.) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias Lonesshort {
+  set -u3600 $+(%,Lonesshorttimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(LonesShort) != $null,$BotSetting(LonesShort),600)
+  if ($BotSetting(LonesVisible) = $null) {
+    message $chan $iif($BotSetting(LonesMessage) != $null,$BotSetting(LonesMessage),Please don't use lone emotes.) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias Loneslong {
+  set -u3600 $+(%,Loneslongtimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(LonesLong) != $null,$BotSetting(LonesLong),2880)
+  if ($BotSetting(LonesVisible) = $null) {
+    message $chan $iif($BotSetting(LonesMessage) != $null,$BotSetting(LonesMessage),Please don't use lone emotes.) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias Loneswarning {
+  set -u3600 $+(%,Lonesbanwarning.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(LonesLong) != $null,$BotSetting(LonesLong),2880)
+  if ($BotSetting(LonesVisible) = $null) {
+    message $chan $iif($BotSetting(LonesMessage) != $null,$BotSetting(LonesMessage),Please don't use lone emotes.) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias Lonesban {
+  set -u3600 $+(%,Lonesban.,$chan,.,$nick) ON
+  message $chan /ban $1
+  if ($BotSetting(LonesVisible) = $null) {
+    message $chan $iif($BotSetting(LonesMessage) != $null,$BotSetting(LonesMessage),Please don't use lone emotes.) ( $+ $user($1) $+ ) (Ban)
+  }
+}
+
+alias tw_check_lone_emote {
+  if (!$1) { return }
+  set %lonelink https://twitchemotes.com/api_cache/v2/global.json
+  set %loneticks twcf_ $+ $ticks
+  JSONOpen -ud %loneticks %lonelink
+  set %loneresult $json(%loneticks,emotes,$1) 
+  JSONClose %loneticks
+  unset %lonelink
+  unset %loneticks
+  if (%loneresult isnum) { return True }
+  elseif (%loneresult = $null) { return False }
+}
