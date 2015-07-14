@@ -10,7 +10,7 @@ on *:text:* subscribed to *:#:{
         message $chan $replace($iif($BotSetting(HostReSubMessage) != $null,$BotSetting(HostReSubMessage),$user($1) subscribed to $4 for the $6 $+ th month!),^USER^,$user($1),^NICK^,$1,^MONTHS^,$6,^SUBCHAN^,$4,^CHAN^,$owner)
       }
       else {
-        message $chan $replace($iif($BotSetting(HostSubMessage) != $null,$BotSetting(HostSubMessage),$user($1) subscribed to $4 $+ !),^USER^,$user($1),^NICK^,$1,^MONTHS^,$5,^SUBCHAN^,$4,^CHAN^,$owner)
+        message $chan $replace($iif($BotSetting(HostSubMessage) != $null,$BotSetting(HostSubMessage),$user($1) subscribed to $5 $+ !),^USER^,$user($1),^NICK^,$1,^MONTHS^,$5,^SUBCHAN^,$5,^CHAN^,$owner)
       }
     }
   }
