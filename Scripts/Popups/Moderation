@@ -1,0 +1,17 @@
+Moderate
+.Purge: msg $chan /timeout $1 1 
+.Timeout
+..10 Minutes: msg $chan /timeout $1 600 
+..30 Minutes: msg $chan /timeout $1 1800
+..1 Hour: msg $chan /timeout $1 3600
+..2 Hours: msg $chan /timeout $1 7200
+..4 Hours: msg $chan /timeout $1 14400
+..6 Hours: msg $chan /timeout $1 21600
+..8 Hours: msg $chan /timeout $1 28800
+..12 Hours: msg $chan /timeout $1 43200
+..16 Hours: msg $chan /timeout $1 57600
+..18 Hours: msg $chan /timeout $1 64800
+..20 Hours: msg $chan /timeout $1 72000
+..24 Hours: msg $chan /timeout $1 86400
+.Ban: msg $chan /ban $1
+.Unban: msg $chan .unban $1
