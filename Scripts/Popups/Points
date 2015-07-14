@@ -1,0 +1,44 @@
+$Points
+.Add $Points
+..+1 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + 1)
+  echo -a 1 $points given to $capital($1) $+ .
+}
+..+10 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + 10)
+  echo -a 10 $points given to $capital($1) $+ .
+}
+..+20 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + 20)
+  echo -a 20 $points given to $capital($1) $+ .
+}
+..+50 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + 50)
+  echo -a 50 $points given to $capital($1) $+ .
+}
+..+100 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + 100)
+  echo -a 100 $points given to $capital($1) $+ .
+}
+.Remove $Points
+..-1 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) - 1)
+  echo -a 1 $points taken from $capital($1) $+ .
+}
+..-10 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) - 10)
+  echo -a 10 $points taken from $capital($1) $+ .
+}
+..-20 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) - 20)
+  echo -a 20 $points taken from $capital($1) $+ .
+}
+..-50 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) - 50)
+  echo -a 50 $points taken from $capital($1) $+ .
+}
+..-100 $Points: {
+  writeini PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) - 100)
+  echo -a 100 $points taken from $capital($1) $+ .
+}
+.View $Points Total: echo -a $capital($1) has $iif($readini(PointsUpdated.ini,$chan,$1) != $null,$readini(PointsUpdated.ini,$chan,$1),0) $Points $+ .
