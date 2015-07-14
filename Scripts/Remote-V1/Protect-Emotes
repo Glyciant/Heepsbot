@@ -1,0 +1,288 @@
+; Script Name: ProtectEmotes.ini
+; Type: Optional
+; Credits - None
+; It is recommended that you do not modify this script.
+
+on *:text:!set emotes*:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = on) {
+      writeini -n BotSettings.ini $chan Emotes ON
+      message $chan $user($nick) -> Emotes protection has been enabled.
+    }
+    if ($3 = off) {
+      remini BotSettings.ini $chan Emotes
+      message $chan $user($nick) -> Emotes protection has been disabled.
+    }
+    if ($3 = message) {
+      writeini -n BotSettings.ini $chan EmotesMessage $4-
+      message $chan $user($nick) -> Emotes message updated.
+    }
+    if ($3 = visibility) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan EmotesVisible
+        message $chan $user($nick) -> Emotes messages have been enabled.
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan EmotesVisible .
+        message $chan $user($nick) -> Emotes messages have been disabled.
+      }
+    }
+    if ($3 = shortlength) {
+      if (($4 !isnum) || ($4 > $BotSetting(EmotesLong))) {
+        message $chan $user($nick) -> You must choose a number smaller than the long timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan EmotesShort $4
+        message $chan $user($nick) -> The Emotes short timeout length was updated.
+      }
+    }
+    if ($3 = longlength) {
+      if (($4 !isnum) || ($4 < $BotSetting(EmotesShort))) {
+        message $chan $user($nick) -> You must choose a number greater than the short timeout length.
+      }
+      else {
+        writeini -n BotSettings.ini $chan EmotesLong $4
+        message $chan $user($nick) -> The Emotes long timeout length was updated.
+      }
+    }
+    if ($3 = max) {
+      if ($4 = purge) {
+        if ($BotSetting(EmotesMin) = $null) {
+          writeini -n BotSettings.ini $chan EmotesMax Purge
+          message $chan $user($nick) -> The emotes maximum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+      }
+      if ($4 = short) {
+        if ($BotSetting(EmotesMin) = Ban) || ($BotSetting(EmotesMin) = Long) {
+          message $chan $user($nick) -> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          remini BotSettings.ini $chan EmotesMax
+          message $chan $user($nick) -> Theemotes maximum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if ($BotSetting(EmotesMin) = Ban) {
+          message $chan $user($nick)-> The maximum action cannot be bigger than the minimum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan EmotesMax Long
+          message $chan $user($nick) -> The emotes maximum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        writeini -n BotSettings.ini $chan EmotesMax Ban
+        message $chan $user($nick) -> The emotes maximum action was updated.
+      }
+    }
+    if ($3 = min) {
+      if ($4 = purge) {
+        remini BotSettings.ini $chan EmotesMin
+        message $chan $user($nick) -> The emotes minimum action was updated.
+      }
+      if ($4 = short) {
+        if ($BotSetting(EmotesMax) = Purge) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan EmotesMin Short
+          message $chan $user($nick) -> The emotes minimum action was updated.
+        }
+      }
+      if ($4 = long) {
+        if (($BotSetting(EmotesMax) = Purge) || (($BotSetting(EmotesMax) = Short)) {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+        else {
+          writeini -n BotSettings.ini $chan EmotesMin Long
+          message $chan $user($nick) -> The emotes minimum action was updated.
+        }
+      }
+      if ($4 = ban) {
+        if ($BotSetting(EmotesMax) = Ban) {
+          writeini -n BotSettings.ini $chan EmotesMin Ban
+          message $chan $user($nick) -> The emotes minimum action was updated.
+        }
+        else {
+          message $chan $user($nick) -> The minimum action cannot be bigger than the maximum.
+        }
+      }
+    }
+    if ($3 = warning) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan EmotesWarning
+        message $chan $user($nick) -> The emotes ban warning was enabled.
+
+      }
+      if ($4 = off) {
+        writeini -n BotSettings.ini $chan EmotesWarning .
+        message $chan $user($nick) -> The emotes ban warning was disabled.
+      }
+    }
+    elseif ($3 = allow) {
+      if ($4 isnum) && ($4 > 500) {
+        writeini -n BotSettings.ini $chan EmotesSafe $4
+        message $chan $user($nick) -> Users with a userlevel of $4 or above will now not be affected.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a userlevel below 500.
+      }
+    }
+    elseif ($3 = allowed) {
+      if ($4 isnum) {
+        writeini -n BotSettings.ini $chan AllowedEmotes $4
+        message $chan $user($nick) -> Users who use more than $4 emotes in a message will now be timed out.
+      }
+      else {
+        message $chan $user($nick) -> You must choose a number.
+      }
+    }
+    elseif ($3 = $null) {
+      message $chan $user($nick) -> Emotes Protection is currently $iif($BotSetting(Emotes) != $null,on.,off.)
+    }
+  }
+}
+
+on *:text:!forget emotes *:#: {
+  if ($access($nick) <= 400) {
+    unset $+(%,Emotesban.,$chan,.,$3)
+    unset $+(%,Emotesbanwarning.,$chan,.,$3)
+    unset $+(%,Emotesshorttimeout.,$chan,.,$3)
+    unset $+(%,Emoteslongtimeout.,$chan,.,$3)
+    unset $+(%,Emotespurge.,$chan,.,$3)
+    message $chan $user($nick) -> $3 is no longer known by me on this channel for typing lone emotes.
+  }
+}
+
+on *:text:*:#:{
+  if ($BotSetting(Emotes) != $null) {
+    if ($access($nick) <= $iif($BotSetting(EmotesSafe) != $null,$BotSetting(EmotesSafe),600)) { return }
+    set %emotei 1
+    set %emotej $0
+    set $+(%,emotenum.,$nick) 0
+    while (%emotei <= %emotej) {
+      if ($tw_check_emotes($($+($,%emotei),2)) = True) || $tw_check_emotes_subs($($+($,%emotei),2)) = True) {
+        inc $+(%,emotenum.,$nick)
+      }
+      inc %emotei
+    }
+    unset %emotei
+    unset %emotej
+    if ($($+(%,emotenum.,$nick),2) >= $iif($BotSetting(AllowedEmotes) != $null,$BotSetting(AllowedEmotes),4)) {
+      if ($BotSetting(EmotesWarning) = $null) && ($($+(%,Emoteslongtimeout.,$chan,.,$nick),2)) {
+        Emotesban $nick
+      }
+      elseif ($($+(%,Emoteslongtimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(EmotesMax) = Long) {
+          Emoteslong $nick
+        }
+        elseif ($BotSetting(EmotesWarning) = $null) {
+          Emoteswarning $nick
+        }
+        else {
+          Emotesban $nick
+        }
+      }
+      elseif ($($+(%,Emotesshorttimeout.,$chan,.,$nick),2)) {
+        if ($BotSetting(EmotesMax) = $null) {
+          Emotesshort $nick
+        }
+        else {
+          Emoteslong $nick
+        }
+      }
+      elseif ($($+(%,Emotespurge.,$chan,.,$nick),2)) {
+        if ($BotSetting(EmotesMax) = Purge) {
+          Emotespurge $nick
+        }
+        else {
+          Emotesshort $nick
+        }
+      }
+      else {
+        if ($BotSetting(EmotesMin) = Ban) {
+          Emotesban $nick
+        }
+        elseif ($BotSetting(EmotesMin) = Long) {
+          Emoteslong $nick
+        }
+        elseif ($BotSetting(EmotesMin) = Short) {
+          Emotesshort $nick
+        }
+        else {
+          Emotespurge $nick
+        }
+      }
+    }
+    unset $+(%,emotenum.,$nick)
+  }
+}
+
+alias Emotespurge {
+  set -u3600 $+(%,Emotespurge.,$chan,.,$nick) ON
+  message $chan /timeout $1 1
+  if ($BotSetting(EmotesVisible) = $null) {
+    message $chan $iif($BotSetting(EmotesMessage) != $null,$BotSetting(EmotesMessage),Please don't spam emotes.) ( $+ $user($1) $+ ) (Purge)
+  }
+}
+
+alias Emotesshort {
+  set -u3600 $+(%,Emotesshorttimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(EmotesShort) != $null,$BotSetting(EmotesShort),600)
+  if ($BotSetting(EmotesVisible) = $null) {
+    message $chan $iif($BotSetting(EmotesMessage) != $null,$BotSetting(EmotesMessage),Please don't spam emotes.) ( $+ $user($1) $+ ) (Short Timeout)
+  }
+}
+
+alias Emoteslong {
+  set -u3600 $+(%,Emoteslongtimeout.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(EmotesLong) != $null,$BotSetting(EmotesLong),2880)
+  if ($BotSetting(EmotesVisible) = $null) {
+    message $chan $iif($BotSetting(EmotesMessage) != $null,$BotSetting(EmotesMessage),Please don't spam emotes.) ( $+ $user($1) $+ ) (Long Timeout)
+  }
+}
+
+alias Emoteswarning {
+  set -u3600 $+(%,Emotesbanwarning.,$chan,.,$nick) ON
+  message $chan /timeout $1 $iif($BotSetting(EmotesLong) != $null,$BotSetting(EmotesLong),2880)
+  if ($BotSetting(EmotesVisible) = $null) {
+    message $chan $iif($BotSetting(EmotesMessage) != $null,$BotSetting(EmotesMessage),Please don't spam emotes.) ( $+ $user($1) $+ ) (Long Timeout & Ban Warning)
+  }
+}
+
+alias Emotesban {
+  set -u3600 $+(%,Emotesban.,$chan,.,$nick) ON
+  message $chan /ban $1
+  if ($BotSetting(EmotesVisible) = $null) {
+    message $chan $iif($BotSetting(EmotesMessage) != $null,$BotSetting(EmotesMessage),Please don't spam emotes.) ( $+ $user($1) $+ ) (Ban)
+  }
+}
+
+alias tw_check_emotes {
+  if (!$1) { return }
+  set %emotelink https://twitchemotes.com/api_cache/v2/global.json
+  set %emoteticks twcf_ $+ $ticks
+  JSONOpen -ud %emoteticks %emotelink
+  set %emoteresult $json(%emoteticks,emotes,$1) 
+  JSONClose %emoteticks
+  unset %emotelink
+  unset %emoteticks
+  if (%emoteresult isnum) { return True }
+  elseif (%emoteresult = $null) { return False }
+}
+
+alias tw_check_emotes_subs {
+  if (!$1) { return }
+  set %emotesublink https://twitchemotes.com/api_cache/v2/subscriber.json
+  set %emotesubticks twcf_ $+ $ticks
+  JSONOpen -ud %emotesubticks %emotesublink
+  set %emotesubresult $json(%emotesubticks,emotesubs,$1) 
+  JSONClose %emotesubticks
+  unset %emotesublink
+  unset %emotesubticks
+  if (%emotesubresult isnum) { return True }
+  elseif (%emotesubresult = $null) { return False }
+}
