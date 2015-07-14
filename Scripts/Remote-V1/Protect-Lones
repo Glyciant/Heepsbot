@@ -151,7 +151,7 @@ on *:text:!forget lones *:#: {
 on *:text:*:#:{
   if ($BotSetting(Lones) != $null) {
     if ($0 = 1) {
-      if ($tw_check_lone_emote($1) = True) {
+      if ($tw_check_lone_emote($1) = True) || ($tw_check_lone_emote_subs($1) = True) {
         if ($access($nick) <= $iif($BotSetting(LonesSafe) != $null,$BotSetting(LonesSafe),600)) { return }
         if ($BotSetting(LonesWarning) = $null) && ($($+(%,Loneslongtimeout.,$chan,.,$nick),2)) {
           Lonesban $nick
@@ -253,4 +253,17 @@ alias tw_check_lone_emote {
   unset %loneticks
   if (%loneresult isnum) { return True }
   elseif (%loneresult = $null) { return False }
+}
+
+alias tw_check_lone_subs {
+  if (!$1) { return }
+  set %lonesublink https://twitchemotes.com/api_cache/v2/subscriber.json
+  set %lonesubticks twcf_ $+ $ticks
+  JSONOpen -ud %lonesubticks %lonesublink
+  set %lonesubresult $json(%lonesubticks,lonesubs,$1) 
+  JSONClose %lonesubticks
+  unset %lonesublink
+  unset %lonesubticks
+  if (%lonesubresult isnum) { return True }
+  elseif (%lonesubresult = $null) { return False }
 }
