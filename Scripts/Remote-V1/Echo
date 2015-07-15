@@ -1,4 +1,4 @@
-; Script Name: Betting.ini
+; Script Name: Echo.ini
 ; Type: Optional
 ; Credits - None
 ; You may edit this script.
@@ -49,4 +49,104 @@ alias EchoMessage {
 }
 alias ComRun {
   message $1 $remove($2-,^USER^,->,^TOUSER^,^NICK^,^CHAN^)
+}
+
+on *:notice:*:#: {
+  if (This room is now in subscribers-only mode. isin $1-) {
+    if ($BotSetting(EchoSub) != $null) { return }
+  }
+  if (This room is no longer in subscribers-only mode. isin $1-) {
+    if ($BotSetting(EchoSubOff) != $null) { return }
+  }
+  if (This room is now in slow mode. You may send messages every isin $1-) {
+    if ($BotSetting(EchoSlow) != $null) { return }
+  }
+  if (This room is no longer in slow mode. isin $1-) {
+    if ($BotSetting(EchoSlowOff) != $null) { return }
+  }
+  if (This room is now in r9k mode. isin $1-) {
+    if ($BotSetting(EchoR9K) != $null) { return }
+  }
+  if (This room is no longer in r9k mode. isin $1-) {
+    if ($BotSetting(EchoR9KOff) != $null) { return }
+  }
+  if (Now hosting isin $1-) || (Exited host mode. isin $1-) {
+    if ($BotSetting(EchoHost) != $null) { return }
+  }
+  message $chan $1-
+}
+
+on *:text:!set state *:#: {
+  if ($access($nick) <= 400) {
+    if ($3 = submode) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan EchoSub
+        message $chan Subscribers-Only Mode enabling messages will now be shown.
+      }
+      if ($4 = off) {
+        writeini BotSettings.ini $chan EchoSub Off
+        message $chan Subscribers-Only Mode enabling messages will now not be shown.
+      }
+    }
+    if ($3 = slowmode) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan EchoSlow
+        message $chan Slow Mode enabling messages will now be shown.
+      }
+      if ($4 = off) {
+        writeini BotSettings.ini $chan EchoSlow Off
+        message $chan Slow Mode enabling messages will now not be shown
+      }
+    }
+    if ($3 = suboff) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan EchoSubOff
+        message $chan Subscribers-Only Mode disabling messages will now be shown
+      }
+      if ($4 = off) {
+        writeini BotSettings.ini $chan EchoSubOff Off
+        message $chan Subscribers-Only Mode disabling messages will not now be shown
+      }
+    }
+    if ($3 = slowoff) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan EchoSlowOff
+        message $chan Slow Mode disabling messages will now be shown.
+      }
+      if ($4 = off) {
+        writeini BotSettings.ini $chan EchoSlowOff Off
+        message $chan Slow Mode disabling messages will now not be shown.
+      }
+    }
+    if ($3 = r9k) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan EchoR9K
+        message $chan R9K Mode enabling messages will now be shown.
+      }
+      if ($4 = off) {
+        writeini BotSettings.ini $chan EchoR9K Off
+        message $chan R9K Mode enabling messages will now not be shown.
+      }
+    }
+    if ($3 = r9koff) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan EchoR9KOff
+        message $chan R9K Mode disabling messages will now be shown.
+      }
+      if ($4 = off) {
+        writeini BotSettings.ini $chan EchoR9KOff Off
+        message $chan R9K Mode disabling messages will now not be shown.
+      }
+    }
+    if ($3 = host) {
+      if ($4 = on) {
+        remini BotSettings.ini $chan EchoHost
+        message $chan Host Mode messages will now be shown.
+      }
+      if ($4 = off) {
+        writeini BotSettings.ini $chan EchoHost Off
+        message $chan Host Mode messages will now not be shown.
+      }
+    }
+  }
 }
