@@ -4,12 +4,12 @@
 ; It is recommended that you do not modify this script.
 
 ON *:PART:#: {
-  if ($nick == $me) { unset %stream_auto_ [ $+ [ $chan ] ] | .timer[FOLLOWERS_CHECK_ [ $+ [ $chan ] ] off }
+  if ($nick == $me) { unset %stream_auto_ [ $+ [ $chan ] ] | $+(timerfollowcheck.,$chan off) }
 }
 
 ON *:JOIN:#: {
   set %stream_chan_ [ $+ [ $chan ] ] $owner
-  .timer[FOLLOWERS_CHECK_ $+ $chan $+ ] 0 5 twitch_check_new $chan %stream_chan_ [ $+ [ $chan ] ]
+  $+(timerfollowcheck.,$chan 0 5) twitch_check_new $chan %stream_chan_ [ $+ [ $chan ] ]
 }
 
 on *:text:!checkfollow &:#: {
@@ -43,17 +43,17 @@ alias tw_check_follow_user {
   unset %u
 }
 
-on *:TEXT:!autofollow*:#: {
+on *:TEXT:!set autofollow*:#: {
   if ($access($nick) <= 400) {
-    if (!$2) { message $chan $user($nick) -> Insufficient Parameters - Usage: !autofollow on/off | return }
-    var %opt = $2
+    if (!$3) { message $chan $user($nick) -> Insufficient Parameters - Usage: !autofollow on/off | return }
+    var %opt = $3
     if (%opt !== ON) && (%opt !== OFF) { message $chan $user($nick) -> Incorrect Parameters - Usage: !autofollow on/off | return }
     if (%opt == ON) {
       if (!%stream_chan_ [ $+ [ $chan ] ]) { message $chan $user($nick) -> Error: Could not find channel to search for. | return }
       if (%stream_auto_ [ $+ [ $chan ] ]) { message $chan $user($nick) -> Follower notifications are already enabled. }
       else {
         set %stream_auto_ [ $+ [ $chan ] ] $ctime
-        writeini -n BotSettings.ini $chan Auto-Follow .
+        writeini -n BotSettings.ini $chan AutoFollow .
         message $chan $user($nick) -> Follower notifications have been enabled.
       }
     }
@@ -61,9 +61,9 @@ on *:TEXT:!autofollow*:#: {
       if (!%stream_chan_ [ $+ [ $chan ] ]) { $user($nick) -> Error: Could not find channel to search for. | return }
       if (!%stream_auto_ [ $+ [ $chan ] ]) { .message $chan $user($nick) -> Follower notifications are already disabled. }
       else {
-        remini BotSettings.ini $chan Auto-Follow
+        remini BotSettings.ini $chan AutoFollow
         unset %stream_auto_ [ $+ [ $chan ] ]
-        message $chan message $chan $user($nick) -> Follower notifications have been disabled.
+        message $chan $user($nick) -> Follower notifications have been disabled.
       }
     }
   }
@@ -97,8 +97,8 @@ alias twitch_check_new {
   hadd -m ls_followers_ [ $+ [ $2 ] $+ ] _ [ $+ [ $1 ] ] %name $ctime(%followed)
   if ($hget(ls_followers_last_ [ $+ [ $2 ] $+ ] _ [ $+ [ $1 ] ])) { hfree $v1 }
   hadd -m ls_followers_last_ [ $+ [ $2 ] $+ ] _ [ $+ [ $1 ] ] %name $ctime(%followed)
-  if ($BotSetting(Auto-Follow) != $null) {
-    .message $1 $replace($iif($BotSetting(FollowMessage,$1),$BotSetting(FollowMessage,$1),Thanks for following - ^NICK^),^USER^,$user(%name),^NICK^,%name,^CHAN^,$owner)
+  if ($BotSetting(AutoFollow,$1) != $null) {
+    message $1 $replace($iif($BotSetting(FollowMessage,$1),$BotSetting(FollowMessage,$1),Thanks for following - ^NICK^),^USER^,$user(%name),^NICK^,%name,^CHAN^,$owner)
   }
   writeini -n BotSettings.ini $1 Follows $calc($BotSetting(Follows,$1) + 1)
   if ($BotSetting(Follows) > $BotSetting(FollowRecord)) {
@@ -131,3 +131,4 @@ alias _timeago {
   if (($1 <= 31540000) && ($1 > 2592000)) { return $floor($calc($1 / 2592000)) $iif($floor($calc($1 / 2592000)) > 1,months,month) $+ , $round($calc($calc($1 - $calc($floor($calc($1 / 2592000))*2592000)) / 86400),0) $iif($round($calc($calc($1 - $calc($floor($calc($1 / 2592000))*2592000)) / 86400),0) > 1,days,day) ago }
   if ($1 > 31104000) { return $floor($calc($1 / 31104000)) $iif($floor($calc($1 / 31104000)) > 1,years,year) $+ , $round($calc($calc($1 - $calc($floor($calc($1 / 31104000))*31104000)) / 2592000),0) $iif($round($calc($calc($1 - $calc($floor($calc($1 / 31104000))*31104000)) / 2592000),0) > 1,months,month) ago }
 }
+
