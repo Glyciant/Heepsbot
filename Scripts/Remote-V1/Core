@@ -405,8 +405,8 @@ on *:text:*:#: {
         }
       }
     }
-    elseif ($2 = serverreconnect) {
-      if ($access($nick) <= 5) {
+    elseif ($2 = server) {
+      if ($access($nick) <= 50) {
         message $chan $user($nick) -> Reconnecting...
         server
       }
