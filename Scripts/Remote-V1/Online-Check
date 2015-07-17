@@ -84,15 +84,15 @@ alias LiveCheck {
 
 alias ViewCheck {
   if (!$1) { return }
-  set $+(%viewlink.,$1) https://api.twitch.tv/kraken/streams/ $+ $1
-  set $+(%viewticks.,$1) twcf_ $+ $ticks
-  JSONOpen -ud $($+(%viewticks.,$1),2) $($+(%viewlink.,$1),2)
-  set $+(%viewcheck.,$1) $json($($+(%viewticks.,$1),2),stream,viewers) 
-  if ($($+(%viewcheck.,$1),2) = $null) { return }
+  set $+(%,viewlink.,$1) https://api.twitch.tv/kraken/streams/ $+ $1
+  set $+(%,viewticks.,$1) twcf_ $+ $ticks
+  JSONOpen -ud $($+(%,viewticks.,$1),2) $($+(%,viewlink.,$1),2)
+  set $+(%,viewcheck.,$1) $json($($+(%,viewticks.,$1),2),stream,viewers) 
+  if ($($+(%,viewcheck.,$1),2) = $null) { return }
   :end
-  writeini -n BotSettings.ini $2 Viewers $($+(%viewcheck.,$1),2)
-  if ($BotSetting(Viewers,$2) > $BotSetting(ViewerRecord,$2)) {
-    writeini -n BotSettings.ini $2 ViewerRecord $readini(BotSettings.ini,$chan,Viewers)
+  writeini -n BotSettings.ini $2 Viewers $($+(%,viewcheck.,$1),2)
+  if ($readini(BotSettings.ini,$2,Viewers) > $readini(BotSettings.ini,$2,ViewerRecord)) || ($readini(BotSettings.ini,$2,ViewerRecord) = $null) {
+    writeini -n BotSettings.ini $2 ViewerRecord $readini(BotSettings.ini,$2,Viewers)
   }
   :end2
   JSONClose $($+(%viewticks.,$1),2)
