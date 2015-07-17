@@ -123,11 +123,13 @@ on *:text:!level !shoutout &:#: {
 }
 
 on *:text:!highlight *:#: {
-  set $+(%,highlight.,$chan) $2-
-  set %target $iif($2,$2,$mid(#,2-))
-  set %channel $chan
-  highlight
-  message $chan $user($nick) -> Highlight notice created.
+  if ($access($nick) <= $highlightlevel) {
+    set $+(%,highlight.,$chan) $2-
+    set %target $iif($2,$2,$mid(#,2-))
+    set %channel $chan
+    highlight
+    message $chan $user($nick) -> Highlight notice created.
+  }
 }
 
 ;Uptime sockets from http://forums.mirc.com/ubbthreads.php/ubb/showflat/Number/247767/Searchpage/1/Main/46779/Words/%21uptime/Search/true/Re:_Little_socket_script_-_pro#Post247767
@@ -158,6 +160,22 @@ on *:sockread:highlight:{
 on *:sockclose:highlight:{ 
   unset %channel
   unset %target
+}
+
+alias highlightlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!highlight) != $null, $readini(CommandLevels.ini,$chan,!highlight), 300)
+}
+
+on *:text:!level !highlight &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !highlight $3
+      message $chan $user($nick) -> The command userlevel for !highlight has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
 }
 
 on *:text:!random*:#: {
