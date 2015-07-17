@@ -92,6 +92,7 @@ alias twitch_check_new {
   var %vv = twl_ $+ $ticks
   JSONOpen -ud %vv %uu
   if (%JSONError) { goto end | return }
+  if ($readini(BotSettings.ini,$1,LastFollower) = %name) { return }
   if (!$hget(ls_followers_ [ $+ [ $2 ] $+ ] _ [ $+ [ $1 ] ])) { hmake ls_followers_ [ $+ [ $2 ] $+ ] _ [ $+ [ $1 ] ] 500 }
   if ($hfind(ls_followers_ [ $+ [ $2 ] $+ ] _ [ $+ [ $1 ] ],%name)) { goto end | return }
   hadd -m ls_followers_ [ $+ [ $2 ] $+ ] _ [ $+ [ $1 ] ] %name $ctime(%followed)
@@ -100,9 +101,12 @@ alias twitch_check_new {
   if ($BotSetting(AutoFollow,$1) != $null) {
     message $1 $replace($iif($BotSetting(FollowMessage,$1),$BotSetting(FollowMessage,$1),Thanks for following - ^NICK^),^USER^,$user(%name),^NICK^,%name,^CHAN^,$owner)
   }
-  writeini -n BotSettings.ini $1 Follows $calc($BotSetting(Follows,$1) + 1)
-  if ($BotSetting(Follows) > $BotSetting(FollowRecord)) {
-    writeini -n BotSettings.ini $1 FollowRecord $calc($BotSetting(FollowRecord,$1) + 1) 
+  writeini -n BotSettings.ini $1 LastFollower %name
+  if ($readini(BotSettings.ini,$chan,Status) != $null) {
+    writeini -n BotSettings.ini $1 Follows $calc($BotSetting(Follows,$1) + 1)
+    if ($readini(BotSettings.ini,$1,Follows) > $readini(BotSettings.ini,$1,FollowRecord)) || ($readini(BotSettings.ini,$1,FollowRecord) = $null) {
+      writeini -n BotSettings.ini $1 FollowRecord $calc($readini(BotSettings.ini,$1,FollowRecord) + 1) 
+    }
   }
   :end
   JSONClose %v
