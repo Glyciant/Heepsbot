@@ -227,12 +227,7 @@ alias CommandRun {
     }
     else {
       writeini -n CustomCommandsCount.ini $1 $3 $calc($readini(customcommandscount.ini, $1, $3) + 1)
-      if ($4) {
-        message $1 $replace($readini(CustomCommands.ini, $1, $3),^USER^,$user($2),^NICK^,$2,^TOUSER^,$4,^CHAN^,$+(%,owner.,$1),^COUNT^,$readini(customcommandscount.ini, $1, $3),^SUB^,$($+(%,lastsub.,$1),2)),^FOLLOWER^,$($+(%,lastfollower.,$1),2)))
-      }
-      else {
-        message $1 $replace($readini(CustomCommands.ini, $1, $3),^USER^,$user($2),^NICK^,$2,^TOUSER^,$2,^CHAN^,$+(%,owner.,$1),^COUNT^,$readini(customcommandscount.ini, $1, $3),^SUB^,$($+(%,lastsub.,$1),2)),^FOLLOWER^,$($+(%,lastfollower.,$1),2)))
-      }
+      message $1 $replace($readini(CustomCommands.ini, $1, $3),^USER^,$user($2),^NICK^,$2,^TOUSER^,$iif($4,$4,$2),^CHAN^,$+(%,owner.,$1),^COUNT^,$readini(customcommandscount.ini, $1, $3),^SUB^,$readini(BotSettings.ini,$chan,LastSub),^FOLLOWER^,$readini(BotSettings.ini,$chan,LastFollower))
     }
   }
 }
