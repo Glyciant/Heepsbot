@@ -159,12 +159,12 @@ alias access {
   if ($1 = heep123) {
     return 1
   }
-  elseif ($1 = %master) {
-    return 5
-  }
-  elseif ($istok(%admins,$1,32)) {
+  elseif ($istok(%admins,$1,32)) && (%opensource != $null) {
     return 50
   }
+  elseif ($1 = %master) {
+    return 50
+  
   elseif ($readini(UserLevels.ini,Global,$nick) != $null) {
     return $readini(UserLevels.ini,Global,$nick)
   }
