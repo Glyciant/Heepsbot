@@ -52,6 +52,7 @@ alias ComRun {
 }
 
 on *:notice:*:#: {
+  if (host commands remaining this half hour. isin $1-) { return }
   if (This room is now in subscribers-only mode. isin $1-) {
     if ($BotSetting(EchoSub) != $null) { return }
   }
