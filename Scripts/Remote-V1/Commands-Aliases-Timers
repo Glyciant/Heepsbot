@@ -145,25 +145,34 @@ on *:text:!command count *:#: {
 
 on *:text:!timer add *:#: {
   if ($access($nick) <= 400) {
-    message $chan $user($nick) -> Insufficient Parameters! Usage: !timer add <commandname> <freqency>
-  }
-  elseif ($readini(CustomCommands.ini, $chan, $3) = $null) { 
-    message $chan $user($nick) -> Command $3 does not exist.
-  }
-  elseif ($($+(%,timer.,$3,.,$chan),2)) {
-    message $chan $user($nick) -> $3 is already a timer.
-  }
-  else {
-    set $+(%,timer.,$3,.,$chan) on
-    $+(.timermessage.,$3,.,$chan 0 $4 TimerRun $3 $chan)
-    message $chan $user($nick) -> Command $3 will now be shown every $4 seconds.
+    if ($0 < 4) {
+      message $chan $user($nick) -> Insufficient Parameters! Usage: !timer add <commandname> <freqency>
+    }
+    elseif ($readini(Timers.ini,$chan,$3) != $null) {
+      message $chan $user($nick) -> $3 is already a timer.
+    }
+    else {
+      if ($readini(CustomCommands.ini, $chan, $3) != $null) { 
+        writeini Timers.ini $chan $3 ON
+        $+(.timermessage.,$3,.,$chan 0 $4 TimerRun $3 $chan)
+        message $chan $user($nick) -> Command $3 will now be shown every $4 seconds.
+      }
+      elseif ($readini(CommandAliases.ini,$chan,$3) != $null) {
+        writeini Timers.ini $chan $readini(CommandAliases.ini,$chan,$3) ON
+        $+(.timermessage.,$readini(CommandAliases.ini,$chan,$3),.,$chan 0 $4 TimerRun $readini(CommandAliases.ini,$chan,$3) $chan)
+        message $chan $user($nick) -> Alias $3 (Command $readini(CommandAliases.ini,$chan,$3) $+ ) will now be shown every $4 seconds.
+      }
+      else {
+        message $chan $user($nick) -> Command $3 does not exist.
+      }
+    }
   }
 }
 
 on *:text:!timer remove *:#: {
   if ($access($nick) <= 400) {
-    if ($($+(%,timer.,$3,.,$chan),2)) {
-      unset $+(%,timer.,$3,.,$chan)
+    if ($readini(Timers.ini,$chan,$3) != $null) {
+      remini Timers.ini $chan $3
       $+(.timermessage.,$3,.,$chan off)
       message $chan $user($nick) -> Timer $3 has been deleted.
     }
@@ -174,14 +183,17 @@ on *:text:!timer remove *:#: {
 }
 
 alias TimerRun {
-  writeini -n timercount.ini $2 $1 $calc($readini(timercount.ini, $2, $1) + 1)
-  message $2 Message $replace($readini(CustomCommands.ini, $2, $1),^CHAN^,$+(%,owner.,$2),^COUNT^,$readini(timercount.ini, $2, $1))
+  writeini -n TimerCount.ini $2 $1 $calc($readini(TimerCount.ini, $2, $1) + 1)
+  message $2 $replace($readini(CustomCommands.ini, $2, $1),^CHAN^,$owner,^COUNT^,$readini(TimerCount.ini, $2, $1))
 }
 
 on *:text:!alias add *:#: {
   if ($access($nick) <= 400) {
     if (!$4) {
       message $chan $user($nick) -> Insufficient Parameters! Usage: !alias add <alias name> <command name>
+    }
+    elseif ($readini(CustomCommands.ini,$chan,$4) = $null) {
+      message $chan $user($nick) -> Command $4 does not exist.
     }
     elseif ($readini(commandaliases.ini, $chan, $3) = $null) {
       writeini -n commandaliases.ini $chan $3 $4
@@ -196,9 +208,14 @@ on *:text:!alias add *:#: {
 
 on *:text:!alias remove &:#: {
   if ($access($nick) <= 400) {
-    remini commandaliases.ini $chan $3
-    set $+(%,commandaliases.,$chan) $remtok($($+(%,commandaliases.,$chan),2),$3,1,32)
-    message $chan $user($nick) -> Alias $3 has been deleted.
+    if ($readini(CommandAliases.ini,$chan,$3) != $null) {
+      remini commandaliases.ini $chan $3
+      set $+(%,commandaliases.,$chan) $remtok($($+(%,commandaliases.,$chan),2),$3,1,32)
+      message $chan $user($nick) -> Alias $3 has been deleted.
+    }
+    else {
+      message $chan $user($nick) -> Alias $3 does not exist.
+    }
   }
 }
 
