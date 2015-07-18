@@ -15,3 +15,7 @@ Moderate
 ..24 Hours: msg $chan /timeout $1 86400
 .Ban: msg $chan /ban $1
 .Unban: msg $chan .unban $1
+.Permit: {
+  set -u120 $+(%,permit.,$chan,.,$1) On
+  echo -a $1 has 120 seconds to post one link.
+}
