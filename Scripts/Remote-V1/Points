@@ -104,7 +104,7 @@ alias TimedPoints {
 }
 
 alias points {
-  return $BotSetting( PointsName)
+  return $iif($BotSetting(PointsName) != $null,$BotSetting(PointsName),Points)
 }
 
 on *:text:!claim open &:#: {
@@ -165,6 +165,94 @@ on *:text:* just subscribed!:#: {
   if ($nick = twitchnotify) {
     SubAddPoints $1
   }
+}
+
+alias pointslevel {
+  return $iif($readini(CommandLevels.ini,$chan,!points) != $null, $readini(CommandLevels.ini,$chan,!points), 800)
+}
+
+on *:text:!level *:#: {
+  if ($2 = !points) || ($2 = ! $+ $points) {
+    if ($access <= 400) {
+      if ($3 isnum 1-900) {
+        writeini -n CommandLevels.ini $chan !points $3
+        message $chan $user($nick) -> The command userlevel for ! $+ $points has been updated.
+      }
+      else {
+        message $chan $user($nick) -> You must enter a valid userlevel.
+      }
+    }
+  }
+}
+
+on *:text:!rank add *:#: {
+  if ($0 < 4) {
+    message $chan $user($nick) -> Insufficient Paramaters! Usage: !rank add [Name] [Required $points $+ ]
+  }
+  elseif ($readini(Ranks.ini,$chan,$3) != $null) {
+    message $chan $user($nick) -> A rank named $3 already exists.
+  }
+  else {
+    writeini Ranks.ini $chan $3 $4
+    message $chan Rank $3 has been created!
+  }
+}
+
+on *:text:!rank remove *:#: {
+  if ($0 < 3) {
+    message $chan $user($nick) -> Insufficient Paramaters! Usage: !rank remove [Name]
+  }
+  elseif ($readini(Ranks.ini,$chan,$3) = $null) {
+    message $chan $user($nick) -> Rank $3 does not exist.
+  }
+  else {
+    remini Ranks.ini $chan $3
+    message $chan Rank $3 has been deleted.
+  }
+}
+
+on *:text:!rank next:#: {
+  if ($access($nick) <= $ranklevel) {
+    message $chan $user($nick) -> You need $calc($readini(Ranks.ini,$chan,$ini(Ranks.ini,$chan,$calc($ini(Ranks.ini,$chan,$rank($nick)) + 1))) - $iif($readini(PointsUpdated.ini,$chan,$nick),$readini(PointsUpdated.ini,$chan,$nick),0)) more $points to move to the $ini(Ranks.ini,$chan,$calc($ini(Ranks.ini,$chan,$rank($nick)) + 1)) rank.
+  }
+}
+
+on *:text:!rank:#: {
+  if ($access($nick) <= $ranklevel) {
+    message $chan $user($nick) -> Your rank is $rank($nick)
+  }
+}
+
+alias ranklevel {
+  return $iif($readini(CommandLevels.ini,$chan,!rank) != $null, $readini(CommandLevels.ini,$chan,!rank), 800)
+}
+
+on *:text:!level rank &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !rank $3
+      message $chan $user($nick) -> The command userlevel for ! $+ $rank has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
+
+alias rank {
+  set %ranki 1
+  set %rankpoints $readini(PointsUpdated.ini,$chan,$1)
+  while (%ranki <= $ini(Ranks.ini,$chan,0)) {
+    if ($readini(Ranks.ini,$chan,$ini(Ranks.ini,$chan,%ranki)) <= %rankpoints) {
+      if ($readini(Ranks.ini,$chan,$ini(Ranks.ini,$chan,%ranki)) >= $readini(Ranks.ini,$chan,%ranktop)) {
+        set %ranktop $ini(Ranks.ini,$chan,%ranki)
+      }
+    }
+    inc %ranki
+  }
+  unset %ranki
+  unset %rankpoints
+  return %ranktop
 }
 
 on *:text:*:#: {
@@ -299,24 +387,6 @@ on *:text:*:#: {
       if ($access <= 400) {
         writeini -n BotSettings.ini $chan NoPoints True
         message $chan $user($nick) -> $Points have been disabled.
-      }
-    }
-  }
-}
-
-alias pointslevel {
-  return $iif($readini(CommandLevels.ini,$chan,!points) != $null, $readini(CommandLevels.ini,$chan,!points), 800)
-}
-
-on *:text:!level *:#: {
-  if ($2 = !points) || ($2 = ! $+ $points) {
-    if ($access <= 400) {
-      if ($3 isnum 1-900) {
-        writeini -n CommandLevels.ini $chan !points $3
-        message $chan $user($nick) -> The command userlevel for ! $+ $points has been updated.
-      }
-      else {
-        message $chan $user($nick) -> You must enter a valid userlevel.
       }
     }
   }
