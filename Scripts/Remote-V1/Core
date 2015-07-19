@@ -268,12 +268,16 @@ on *:text:!set lurk &:#: {
 
 on *:text:!chatters:#: {
   if ($access($nick) <= $chatterslevel) {
-    set %c 0
-    while (%c < $nick(#,0,a)) {
-      inc %c
-    }
-    message # $iif(%c != 0,There are %c users currently in chat.,There are currently no users in chat.)
+    message $chan There are currently $chatters chatters.
   }
+}
+
+alias chatters {
+  set %c 0
+  while (%c < $nick(#,0,a)) {
+    inc %c
+  }
+  return %c
 }
 
 alias chatterslevel {
