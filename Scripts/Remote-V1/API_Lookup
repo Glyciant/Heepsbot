@@ -1,5 +1,5 @@
 ; Script Name: ApiLookup.ini
-; Type: Optional
+; Type: Recommended
 ; Credits - None
 ; It is not recommended that you do not modify this script.
 
@@ -53,50 +53,43 @@ alias tw_check_fake {
 on *:text:!followers:#: {
   if ($access($nick) <= $apilevel($1)) {
     tokenize 32 $strip($1-,burci)
-    tw_check_follow_total $remove($chan,$chr(35)) $nick $chan
+    message $chan $capital($owner) has $followers($owner) followers.
   }
 }
 
-alias tw_check_follow_total {
+alias followers {
   if (!$1) { return }
+  unset %message
   set %u https://api.twitch.tv/kraken/channels/ $+ $1
   set %v twcf_ $+ $ticks
   JSONOpen -ud %v %u
   set %message $json(%v,followers) 
-  if (%message isnum) { set %status NoError }
-  :end
-  if (!%status) { message $3 Error: Could not find follower total for $capital($1) $+ . }
-  elseif (%status) { message $3 $capital($1) has %message followers $+ . }
-  :end2
   JSONClose %v
   unset %v
-  unset %message
   unset %u
+  if (!%message) { return [Error] }
+  elseif (%message) { return %message }
 }
 
 on *:text:!following:#: {
   if ($access($nick) <= $apilevel($1)) {
     tokenize 32 $strip($1-,burci)
-    tw_check_following_total $remove($chan,$chr(35)) $nick $chan
+    message $chan $capital($owner) is following $following($owner) users.
   }
 }
 
-alias tw_check_following_total {
+alias following {
   if (!$1) { return }
+  unset %message
   set %u https://api.twitch.tv/kraken/users/ $+ $1 $+ /follows/channels/
   set %v twcf_ $+ $ticks
   JSONOpen -ud %v %u
   set %message $json(%v,_total) 
-  if (%message isnum) { set %status NoError }
-  :end
-  if (!%status) { message $3 Error: Could not find follower total for $capital($1) $+ . }
-  elseif (%status) { message $3 $capital($1) is following %message users.  }
-  :end2
   JSONClose %v
   unset %v
-  unset %message
-  unset %status
   unset %u
+  if (!%message) { return [Error] }
+  elseif (%message) { return %message }
 }
 
 on *:text:!partnership:#: {
@@ -126,73 +119,64 @@ alias tw_check_partner {
 on *:text:!title:#: {
   if ($access($nick) <= $apilevel($1)) {
     tokenize 32 $strip($1-,burci)
-    tw_check_status $remove($chan,$chr(35)) $nick $chan
+    message $chan Stream Title: $title($owner)
   }
 }
 
-alias tw_check_status {
+alias title {
   if (!$1) { return }
+  unset %message
   set %u https://api.twitch.tv/kraken/channels/ $+ $1
   set %v twcf_ $+ $ticks
   JSONOpen -ud %v %u
-  set %message $json(%v,status) 
-  if (%message != $null) { set %status NoError }
-  :end
-  if (!%status) { message $3 There is currently no stream title set. }
-  elseif (%status) { message $3 Current Stream Title: %message }
-  :end2
   JSONClose %v
+  set %message $json(%v,status)    
   unset %v
   unset %u
-  unset %message
-  unset %status
+  if (!%message) { return [No Title] }
+  elseif (%message) { return %message }
 }
 
 on *:text:!game:#: {
   if ($access($nick) <= $apilevel($1)) {
     tokenize 32 $strip($1-,burci)
-    tw_check_game $remove($chan,$chr(35)) $nick $chan
+    message $chan Currently Streaming: $game($owner)
   }
 }
 
-alias tw_check_game {
+alias game {
   if (!$1) { return }
+  unset %message
   set %u https://api.twitch.tv/kraken/channels/ $+ $1
   set %v twcf_ $+ $ticks
   JSONOpen -ud %v %u
   set %message $json(%v,game) 
-  if (%message = $null) { set %status Error }
-  :end
-  if (%status) { message $3 There is currently no stream game set. }
-  elseif (!%status) { message $3 Current Stream Game: %message }
-  :end2
   JSONClose %v
   unset %v
-  unset %message
   unset %u
+  if (!%message) { return [No Type] }
+  elseif (%message) { return %message }
 }
 
 on *:text:!viewers:#: {
   if ($access($nick) <= $apilevel($1)) {
     tokenize 32 $strip($1-,burci)
-    tw_check_viewers $remove($chan,$chr(35)) $nick $chan
+    message $chan There are currently $viewers($owner) $iif($viewers($owner) != [No Viewers],viewers).
   }
 }
 
-alias tw_check_viewers {
+alias viewers {
   if (!$1) { return }
+  unset %message
   set %u https://api.twitch.tv/kraken/streams/ $+ $1
   set %v twcf_ $+ $ticks
   JSONOpen -ud %v %u
-  set %message $json(%v,stream,viewers) 
-  :end
-  if (%message !isnum) { message $3 Error: Could not find viewer total for $capital($1) $+ . }
-  elseif (%message isnum) { message $3 There are currently %message people watching $capital($1) $+ . }
-  :end2
+  set %message $json(%v,viewers) 
   JSONClose %v
   unset %v
   unset %u
-  unset %message
+  if (!%message) { return [No Viewers] }
+  elseif (%message) { return %message }
 }
 
 on *:text:!emotes:#: {
@@ -237,7 +221,7 @@ alias tw_check_emotes {
 }
 
 on *:text:!api*:#: {
-  if ($access($nick) <= 50) {
+  if ($access($nick) <= 250) {
     if ($3 = streams) || ($3 = channels) || ($3 = users) {
       tokenize 32 $strip($1-,burci)
       tw_check_api $2 $nick $chan $lower($3) $lower($4)
