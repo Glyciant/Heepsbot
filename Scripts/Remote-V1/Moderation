@@ -61,10 +61,6 @@ on *:text:*:#: {
           writeini -n ModCommands.ini $chan Slow
           message $chan $user($nick) -> Slow mode command updated.
         }
-        if ($2 = slowtime) {
-          writeini -n ModCommands.ini $chan SlowTime
-          message $chan $user($nick) -> Slow mode default time updated.
-        }
         if ($2 = suboff) {
           writeini -n ModCommands.ini $chan SubOff
           message $chan $user($nick) -> Subscribers-Only off mode command updated.
@@ -87,79 +83,65 @@ on *:text:*:#: {
 }
 
 alias ModPurge {
-  if ($4 = $null) {
-    message $2 $1 -> You must choose a user to purge.
-  }
-  elseif ($5 = $null) {
-    message $2 /timeout $4 1
-    message $3 $1 -> $4 has been purged.
+  if (!$3) {
+    message $2 You must chose a user to purge. 
   }
   else {
-    message $2 /timeout $4 1
-    message $3 $1 -> $4 has been purged for $5- $+ .
+    message $2 /timeout $3 1
+    message $2 $1 -> $3 has been purged $+ $iif($4,$chr(32) for $4-) $+ .
+  }
+}
+
+alias ModTimeout {
+  if (!$3) {
+    message $2 You must chose a user to timeout. 
+  }
+  else {
+    message $2 /timeout $3 $iif($4 isnum,$4,600)
+    message $2 $1 -> $3 has been timed out $+ $iif($4 isnum && $5,$chr(32) for $5-,$iif($4,$chr(32) for $4-)) $+ .
   }
 }
 
 alias ModBan {
-  if ($4 = $null) {
-    message $2 $1 -> You must choose a user to purge.
-  }
-  elseif ($5 = $null) {
-    message $2 /ban $4
-    message $3 $1 -> $4 has been banned.
+  if (!$3) {
+    message $2 You must chose a user to ban. 
   }
   else {
-    message $2 /ban $4
-    message $3 $1 -> $4 has been banned for $5- $+ .
+    message $2 /ban $3
+    message $2 $1 -> $3 has been banned $+ $iif($4,$chr(32) for $4-) $+ .
   }
 }
 
-alias ModUnban {
-  if ($4 = $null) {
-    message $2 $1 -> You must choose a user to purge.
-  }
-  elseif ($5 = $null) {
-    message $2 /unban $4
-    message $3 $1 -> $4 has been banned.
+alias ModUnBan {
+  if (!$3) {
+    message $2 You must chose a user to unban. 
   }
   else {
-    message $2 /unban $4
-    message $3 $1 -> $4 has been banned for $5- $+ .
+    message $2 /unban $3
+    message $2 $1 -> $3 has been unbanned $+ $iif($4,$chr(32) for $4-) $+ .
   }
 }
 
-alias ModSub {
-  message $2 /subscribers
-  message $3 $1 -> Subscribers-Only mode enabled.
-}
-
-alias ModSubOff {
-  message $2 /subscribersoff
-  message $3 $1 -> Subscribers-Only mode disabled.
+alias ModSlow {
+  message $2 /slow $iif($3,$3)
 }
 
 alias ModSlowOff {
   message $2 /slowoff
-  message $3 $1 -> Slow mode disabled.
-}
-
-alias ModSlow {
-  if ($4 = $null) {
-    message $2 /slow $iif($readini(ModCommands.ini, $2, SlowTime) != $null,$readini(ModCommands.ini, $2, SlowTime),120)
-    message $3 $1 -> Slow mode enabled (  $+ $iif($readini(ModCommands.ini, $2, SlowTime) != $null,$readini(ModCommands.ini, $2, SlowTime),120) seconds).
-  }
-  else {
-    message $2 /slow $4
-    message $3 $1 -> Slow mode enabled ( $+ $4 seconds).
-  }
 }
 
 alias ModSub {
-  message $2 /r9kbeta
-  message $3 $1 -> R9K mode enabled.
+  message $2 /subscribers
 }
 
-alias ModSubOff {
-  message $2 /r9koff
-  message $3 $1 -> R9K mode disabled.
+alias ModSuboff {
+  message $2 /subscribersoff
+}
+
+alias ModR9K {
+  message $2 /r9kbeta
+}
+
+alias ModR9KOff {
+  message $2 /r9kbetaoff
 }
