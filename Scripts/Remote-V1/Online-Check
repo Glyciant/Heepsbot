@@ -17,22 +17,22 @@ on *:part:#: {
   }
 }
 
-on *:text:!livemessage *:#: {
+on *:text:!set livemessage *:#: {
   if ($access($nick) <= 400) {
-    if ($2 = on) {
+    if ($3 = on) {
       writeini -n BotSettings.ini $chan Livemessage .
       message $chan $user($nick) -> Live-Check has been enabled.
     }
-    if ($2 = off) {
+    if ($3 = off) {
       remini BotSettings.ini $chan Livemessage
       message $chan $user($nick) -> Live-Check has been disabled.
     }
-    if ($2 = onmessage) {
-      writeini -n BotSettings.ini $chan Onmessage $3-
+    if ($3 = onmessage) {
+      writeini -n BotSettings.ini $chan Onmessage $4-
       message $chan $user($nick) -> Online message updated.
     }
-    if ($2 = offmessage) {
-      writeini -n BotSettings.ini $chan Offmessage $3-
+    if ($3 = offmessage) {
+      writeini -n BotSettings.ini $chan Offmessage $4-
       message $chan $user($nick) -> Offline message updated.
     }
   }
