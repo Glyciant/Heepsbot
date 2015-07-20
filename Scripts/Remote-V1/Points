@@ -186,28 +186,38 @@ on *:text:!level *:#: {
 }
 
 on *:text:!rank add *:#: {
-  if ($0 < 4) {
-    message $chan $user($nick) -> Insufficient Paramaters! Usage: !rank add [Name] [Required $points $+ ]
-  }
-  elseif ($readini(Ranks.ini,$chan,$3) != $null) {
-    message $chan $user($nick) -> A rank named $3 already exists.
-  }
-  else {
-    writeini Ranks.ini $chan $3 $4
-    message $chan Rank $3 has been created!
+  if ($access($nick) <= 400) {
+    if ($0 < 4) {
+      message $chan $user($nick) -> Insufficient Paramaters! Usage: !rank add [Name] [Required $points $+ ]
+    }
+    elseif ($readini(Ranks.ini,$chan,$3) != $null) {
+      message $chan $user($nick) -> A rank named $3 already exists.
+    }
+    else {
+      writeini Ranks.ini $chan $3 $4
+      message $chan Rank $3 has been created!
+    }
   }
 }
 
 on *:text:!rank remove *:#: {
-  if ($0 < 3) {
-    message $chan $user($nick) -> Insufficient Paramaters! Usage: !rank remove [Name]
+  if ($access($nick) <= 400) {
+    if ($0 < 3) {
+      message $chan $user($nick) -> Insufficient Paramaters! Usage: !rank remove [Name]
+    }
+    elseif ($readini(Ranks.ini,$chan,$3) = $null) {
+      message $chan $user($nick) -> Rank $3 does not exist.
+    }
+    else {
+      remini Ranks.ini $chan $3
+      message $chan Rank $3 has been deleted.
+    }
   }
-  elseif ($readini(Ranks.ini,$chan,$3) = $null) {
-    message $chan $user($nick) -> Rank $3 does not exist.
-  }
-  else {
-    remini Ranks.ini $chan $3
-    message $chan Rank $3 has been deleted.
+}
+
+on *:text:!rank view &:#: {
+  if ($access($nick) <= 500) { 
+    message $chan $3 $+ 's rank is $rank($nick) $+ .
   }
 }
 
@@ -231,7 +241,7 @@ on *:text:!level rank &:#: {
   if ($access <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !rank $3
-      message $chan $user($nick) -> The command userlevel for ! $+ $rank has been updated.
+      message $chan $user($nick) -> The command userlevel for !rank has been updated.
     }
     else {
       message $chan $user($nick) -> You must enter a valid userlevel.
@@ -240,11 +250,12 @@ on *:text:!level rank &:#: {
 }
 
 alias rank {
+  unset %ranktop
   set %ranki 1
   set %rankpoints $readini(PointsUpdated.ini,$chan,$1)
   while (%ranki <= $ini(Ranks.ini,$chan,0)) {
     if ($readini(Ranks.ini,$chan,$ini(Ranks.ini,$chan,%ranki)) <= %rankpoints) {
-      if ($readini(Ranks.ini,$chan,$ini(Ranks.ini,$chan,%ranki)) >= $readini(Ranks.ini,$chan,%ranktop)) {
+      if ($readini(Ranks.ini,$chan,$ini(Ranks.ini,$chan,%ranki)) >= $readini(Ranks.ini,$chan,%ranktop)) || (%ranktop = $null) {
         set %ranktop $ini(Ranks.ini,$chan,%ranki)
       }
     }
@@ -252,7 +263,7 @@ alias rank {
   }
   unset %ranki
   unset %rankpoints
-  return %ranktop
+  return $iif(%ranktop,%ranktop,[No Class])
 }
 
 on *:text:*:#: {
