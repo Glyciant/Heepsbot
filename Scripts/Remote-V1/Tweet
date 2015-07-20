@@ -78,7 +78,7 @@ alias timertweetstop {
 }
 
 alias tweetlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!tweet) != $null, $readini(CommandLevels.ini,$chan,!tweet), 800)
+  return $iif($CommandLevel(!tweet) != $null, $CommandLevel(!tweet), 800)
 }
 
 on *:text:!level !tweet &:#: {
