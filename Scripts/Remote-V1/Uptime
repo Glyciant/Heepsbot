@@ -17,7 +17,7 @@ on *:text:!set uptime &:#: {
 }
 
 alias UptimeLevel {
-  return $iif($readini(CommandLevels.ini,$chan,!uptime) != $null, $readini(CommandLevels.ini,$chan,!uptime), 800)
+  return $iif($CommandLevel(!uptime) != $null, $CommandLevel(!uptime), 800)
 }
 
 on *:text:!level !uptime &:#: {
