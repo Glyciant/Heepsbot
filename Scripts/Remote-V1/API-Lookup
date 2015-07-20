@@ -180,7 +180,7 @@ alias viewers {
 }
 
 on *:text:!emotes:#: {
-  if ($access($nick) <= $iif($readini(CommandLevels.ini,$chan,$1) != $null, $readini(CommandLevels.ini,$chan,$1), 500)) {
+  if ($access($nick) <= $iif($CommandLevel($1) != $null, $CommandLevel($1), 500)) {
     tokenize 32 $strip($1-,burci)
     tw_check_emotes $remove($chan,$chr(35)) $nick $chan
   }
@@ -297,5 +297,5 @@ on *:text:!level *:#: {
 }
 
 alias ApiLevel {
-  return $iif($readini(CommandLevels.ini,$chan,$1) != $null, $readini(CommandLevels.ini,$chan,$1), 800)
+  return $iif($CommandLevel($1) != $null, $CommandLevel($1), 800)
 }
