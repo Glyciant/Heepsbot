@@ -168,7 +168,7 @@ on *:text:* just subscribed!:#: {
 }
 
 alias pointslevel {
-  return $iif($readini(CommandLevels.ini,$chan,!points) != $null, $readini(CommandLevels.ini,$chan,!points), 800)
+  return $iif($CommandLevel(!points) != $null, $CommandLevel(!points), 800)
 }
 
 on *:text:!level *:#: {
@@ -234,7 +234,7 @@ on *:text:!rank:#: {
 }
 
 alias ranklevel {
-  return $iif($readini(CommandLevels.ini,$chan,!rank) != $null, $readini(CommandLevels.ini,$chan,!rank), 800)
+  return $iif($CommandLevel(!rank) != $null, $CommandLevel(!rank), 800)
 }
 
 on *:text:!level rank &:#: {
