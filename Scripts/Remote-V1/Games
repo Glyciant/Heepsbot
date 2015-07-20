@@ -38,7 +38,7 @@ on *:text:!set love off:#: {
 }
 
 alias lovelevel {
-  return $iif($readini(CommandLevels.ini,$chan,!love) != $null, $readini(CommandLevels.ini,$chan,!love), 800)
+  return $iif($CommandLevel(!love) != $null, $CommandLevel(!love), 800)
 }
 
 on *:text:!level !love &:#: {
@@ -78,7 +78,7 @@ on *:text:!set 8Ball*:#:{
 }
 
 alias 8ballLevel {
-  return $iif($readini(CommandLevels.ini,$chan,!8ball) != $null, $readini(CommandLevels.ini,$chan,!8ball), 800)
+  return $iif($CommandLevel(!8ball) != $null, $CommandLevel(!8ball), 800)
 }
 
 on *:text:!level !8ball &:#: {
@@ -183,7 +183,7 @@ on *:text:!set roulette*:#:{
 }
 
 alias roulettelevel {
-  return $iif($readini(CommandLevels.ini,$chan,!roulette) != $null, $readini(CommandLevels.ini,$chan,!roulette), 800)
+  return $iif($CommandLevel(!roulette) != $null, $CommandLevel(!roulette), 800)
 }
 
 on *:text:!level !roulette &:#: {
@@ -231,7 +231,7 @@ on *:text:!set seppuku *:#: {
 }
 
 alias seppukulevel {
-  return $iif($readini(CommandLevels.ini,$chan,!seppuku) != $null, $readini(CommandLevels.ini,$chan,!seppuku), 800)
+  return $iif($CommandLevel(!seppuku) != $null, $CommandLevel(!seppuku), 800)
 }
 
 on *:text:!level !seppuku &:#: {
@@ -353,7 +353,7 @@ on *:text:!set heist &:#: {
 }
 
 alias heistlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!heist) != $null, $readini(CommandLevels.ini,$chan,!heist), 800)
+  return $iif($CommandLevel(!heist) != $null, $CommandLevel(!heist), 800)
 }
 
 on *:text:!level !heist &:#: {
