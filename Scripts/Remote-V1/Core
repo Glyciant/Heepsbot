@@ -179,7 +179,7 @@ on *:text:!level !highlight &:#: {
 }
 
 on *:text:!random*:#: {
-  if ($access($nick) <= 500) {
+  if ($access($nick) <= $randomlevel) {
     if ($0 <= 2) {
       message $chan $user($nick) -> You must choose at least 2 things to randomize.
       return
