@@ -49,6 +49,7 @@ on *:text:!log *:#: {
         if ($access($nick) > $readini(Requests.ini,$+($chan,.,$2),Level) != $null) { return }
       }
       if ($readini(Requests.ini,$+($chan,.,$2),Cost) != $null) {
+        writeini PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) - $readini(Requests.ini,$+($chan,.,$2),Cost))
       }
       writeini -n Requests.ini $+($chan,.,$2) $nick $3-
       message $chan $user($nick) -> Your message has been logged.
