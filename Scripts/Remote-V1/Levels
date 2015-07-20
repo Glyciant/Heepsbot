@@ -101,7 +101,7 @@ on *:text:!level *:#: {
             message $chan $user($nick) -> $capital($4) is no longer restricted.
           }
         }
-        if ($2 = admin) {
+          if ($2 = admin) {
     if ($access($nick) <= 500) {
       if ($3 = add) {
         if (!$4) { 
@@ -126,10 +126,6 @@ on *:text:!level *:#: {
           set $+(%,admins.,$chan) $remtok($($+(%,admins.,$chan),2),$4,32)
           message $chan $user($nick) -> $capital($4) is no longer a bot admin.
         }
-      }
-    }
-  }
-
       }
     }
   }
