@@ -97,7 +97,7 @@ on *:text:!hostchannel *:#: {
 }
 
 alias requestlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!request) != $null, $readini(CommandLevels.ini,$chan,!request), 800)
+  return $iif($CommandLevel(!request) != $null, $CommandLevel(!request), 800)
 }
 
 on *:text:!level !request &:#: {
