@@ -252,7 +252,7 @@ alias class {
 }
 
 alias classlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!class) != $null, $readini(CommandLevels.ini,$chan,!class), 800)
+  return $iif($CommandLevel(!class) != $null, $CommandLevel(!class), 800)
 }
 
 on *:text:!level class &:#: {
