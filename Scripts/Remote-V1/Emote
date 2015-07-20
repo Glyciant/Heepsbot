@@ -25,7 +25,7 @@ on *:text:!set emote *:#: {
 }
 
 alias emotecomlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!emote) != $null, $readini(CommandLevels.ini,$chan,!emote), 800)
+  return $iif($CommandLevel(!emote) != $null, $CommandLevel(!emote), 800)
 }
 
 on *:text:!level !emote &:#: {
@@ -62,7 +62,7 @@ on *:text:!set opemote *:#: {
 }
 
 alias opemotecomlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!opemote) != $null, $readini(CommandLevels.ini,$chan,!opemote), 500)
+  return $iif($CommandLevel(!opemote) != $null, $CommandLevel(!opemote), 500)
 }
 
 on *:text:!level !opemote &:#: {
@@ -102,29 +102,29 @@ alias OPEmote {
 }
 
 on *:text:!pyramid &:#: {
-if ($access($nick) <= $pyramidlevel) {
-  unset %pyramidrestart 
-  set %pyramid1 ON
-  set %pyramid2 ON
-  set %pyramid3 ON
-  set %pyramid4 ON
-  set %pyramid5 ON
-  while (%pyramidrestart != End) {
-    set %pyramid $rand(1,5) 
-    if (!%pyramid1) && (!%pyramid2) && (!%pyramid3) && (!%pyramid4) && (!%pyramid5) { unset %pyramid | set %pyramidrestart End | return }
-    if ($($+(%,pyramid,%pyramid),2) != $null) { 
-      if (%pyramid = 1) { message $chan $2 | unset %pyramid1 }
-      if (%pyramid = 2) { message $chan $2 | unset %pyramid2 }
-      if (%pyramid = 3) { message $chan $2 $2 | unset %pyramid3 }
-      if (%pyramid = 4) { message $chan $2 $2 | unset %pyramid4 }
-      if (%pyramid = 5) { message $chan $2 $2 $2 | unset %pyramid5 }
+  if ($access($nick) <= $pyramidlevel) {
+    unset %pyramidrestart 
+    set %pyramid1 ON
+    set %pyramid2 ON
+    set %pyramid3 ON
+    set %pyramid4 ON
+    set %pyramid5 ON
+    while (%pyramidrestart != End) {
+      set %pyramid $rand(1,5) 
+      if (!%pyramid1) && (!%pyramid2) && (!%pyramid3) && (!%pyramid4) && (!%pyramid5) { unset %pyramid | set %pyramidrestart End | return }
+      if ($($+(%,pyramid,%pyramid),2) != $null) { 
+        if (%pyramid = 1) { message $chan $2 | unset %pyramid1 }
+        if (%pyramid = 2) { message $chan $2 | unset %pyramid2 }
+        if (%pyramid = 3) { message $chan $2 $2 | unset %pyramid3 }
+        if (%pyramid = 4) { message $chan $2 $2 | unset %pyramid4 }
+        if (%pyramid = 5) { message $chan $2 $2 $2 | unset %pyramid5 }
+      }
     }
-  }
   }
 }
 
 alias pyramidlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!pyramid) != $null, $readini(CommandLevels.ini,$chan,!pyramid), 500)
+  return $iif($CommandLevel(!pyramid) != $null, $CommandLevel(!pyramid), 500)
 }
 
 on *:text:!level !pyramid &:#: {
@@ -191,7 +191,7 @@ on *:text:*:#: {
 }
 
 alias emotecountlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!emotecount) != $null, $readini(CommandLevels.ini,$chan,!emotecount), 500)
+  return $iif($CommandLevel(!emotecount) != $null, $CommandLevel(!emotecount), 500)
 }
 
 on *:text:!level !emotecount &:#: {
