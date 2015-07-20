@@ -44,7 +44,7 @@ on *:text:!quote:#: {
 }
 
 alias quotelevel {
-  return $iif($readini(CommandLevels.ini,$chan,!quote) != $null, $readini(CommandLevels.ini,$chan,!quote), 800)
+  return $iif($CommandLevel(!quote) != $null, $CommandLevel(!quote), 800)
 }
 
 on *:text:!level !quote &:#: {
