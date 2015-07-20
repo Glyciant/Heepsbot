@@ -34,7 +34,7 @@ on *:text:!test:#: {
 }
 
 alias testlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!test) != $null, $readini(CommandLevels.ini,$chan,!test), 800)
+  return $iif($CommandLevel(!test) != $null, $CommandLevel(!test), 800)
 }
 
 on *:text:!level !test &:#: {
@@ -107,7 +107,7 @@ on *:text:!set shoutout &:#: {
 }
 
 alias shoutoutlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!shoutout) != $null, $readini(CommandLevels.ini,$chan,!shoutout), 800)
+  return $iif($CommandLevel(!shoutout) != $null, $CommandLevel(!shoutout), 800)
 }
 
 on *:text:!level !shoutout &:#: {
@@ -163,7 +163,7 @@ on *:sockclose:highlight:{
 }
 
 alias highlightlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!highlight) != $null, $readini(CommandLevels.ini,$chan,!highlight), 300)
+  return $iif$CommandLevel(!highlight) != $null, $CommandLevel(!highlight), 300)
 }
 
 on *:text:!level !highlight &:#: {
@@ -198,7 +198,7 @@ on *:text:!random*:#: {
 }
 
 alias randomlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!random) != $null, $readini(CommandLevels.ini,$chan,!random), 800)
+  return $iif($CommandLevel(!random) != $null, $CommandLevel(!random), 800)
 }
 
 on *:text:!level !random &:#: {
@@ -230,7 +230,7 @@ on *:text:!unlurk:#: {
 }
 
 alias lurklevel {
-  return $iif($readini(CommandLevels.ini,$chan,!lurk) != $null, $readini(CommandLevels.ini,$chan,!lurk), 800)
+  return $iif($CommandLevel(!lurk) != $null, $CommandLevel(!lurk), 800)
 }
 
 on *:text:!level !lurk &:#: {
@@ -281,7 +281,7 @@ alias chatters {
 }
 
 alias chatterslevel {
-  return $iif($readini(CommandLevels.ini,$chan,!chatters) != $null, $readini(CommandLevels.ini,$chan,!chatters), 800)
+  return $iif($CommandLevel(!chatters) != $null, $CommandLevel(!chatters), 800)
 }
 
 on *:text:!level !chatters &:#: {
@@ -310,7 +310,7 @@ on *:text:!moderators:#: {
 }
 
 alias moderatorslevel {
-  return $iif($readini(CommandLevels.ini,$chan,!moderators) != $null, $readini(CommandLevels.ini,$chan,!moderators), 800)
+  return $iif($CommandLevel(!moderators) != $null,$CommandLevel(!moderators), 800)
 }
 
 on *:text:!level !moderators &:#: {
@@ -337,7 +337,7 @@ on *:text:!bot *:#: {
 }
 
 alias botlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!bot) != $null, $readini(CommandLevels.ini,$chan,!bot), 800)
+  return $iif($CommandLevel(!bot) != $null, $CommandLevel(!bot), 800)
 }
 
 on *:text:!level !bot &:#: {
@@ -359,7 +359,7 @@ on *:text:!say*:#: {
 }
 
 alias saylevel {
-  return $iif($readini(CommandLevels.ini,$chan,!say) != $null, $readini(CommandLevels.ini,$chan,!say), 600)
+  return $iif($CommandLevel(!say) != $null, $CommandLevel(!say), 600)
 }
 
 on *:text:!level !say &:#: {
@@ -449,7 +449,7 @@ on *:text:*:#: {
 }
 
 alias heepsbotlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!heepsbot) != $null, $readini(CommandLevels.ini,$chan,!heepsbot), 800)
+  return $iif($CommandLevel(!heepsbot) != $null, $CommandLevel(!heepsbot), 800)
 }
 
 on *:text:!level *:#: {
