@@ -434,10 +434,14 @@ on *:text:*:#: {
       }
     }
     elseif ($2 = twitter) {
-      message $chan Follow @Heepsbot on Twitter for updates!
+      if ($access($nick) <= $heepsbotlevel) {
+        message $chan Follow @Heepsbot on Twitter for updates!
+      }
     }
     elseif ($2 = wiki) {
-      message $chan View the Heepsbot Reddit Wiki here: https://goo.gl/TzNAes
+      if ($access($nick) <= $heepsbotlevel) {     
+        message $chan View the Heepsbot Reddit Wiki here: https://goo.gl/TzNAes
+      }
     }
   }
   inc %totalmessages
