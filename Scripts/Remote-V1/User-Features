@@ -177,3 +177,92 @@ on *:text:!username manage unban *:#: {
     }
   }
 }
+
+on *:join:#: {
+  if ($nick = $me) {
+    $+(timerincclass.,$chan 0 60) IncClass $chan
+  }
+}
+
+alias IncClass {
+  set %classinci 1
+  while (%classinci <= $nick($1,0,a)) {
+    writeini ClassTimes.ini $1 $nick($1,%classinci,a) $calc($readini(ClassTimes.ini,$1,$nick($1,%classinci,a)) + 1)
+    inc %classinci
+  }
+  unset %classinci
+}
+
+on *:text:!class*:#: {
+  if ($2 = add) {
+    if ($access($nick) <= 400) { 
+      writeini Classes.ini $chan $3 $calc($4 * 60)
+      message $chan The $3 class has been created.
+    }
+  }
+  if ($2 = remove) {
+    if ($access($nick) <= 400) {
+      remini Classes.ini $chan $3
+      message $chan The $3 class has been removed.
+    }
+  }
+  if ($2 = view) {
+    if ($access($nick) <= 500) {
+      message $chan $3 $+ 's class is $class($nick) $+ .
+    }
+  }
+  if ($2 = next) {
+    set %classtime $readini(ClassTimes.ini,$chan,$nick)
+    set %classnext 1
+    while (%classnext <= $ini(ClassTimes.ini,$chan,0)) {
+      if ($readini(Classes.ini,$chan,$ini(Classes.ini,$chan,%classnext)) > %classtime) {
+        if ($readini(Classes.ini,$chan,$ini(Classes.ini,$chan,%classnext)) < %classtop) || %classtop = $null) {
+          set %classtop $readini(Classes.ini,$chan,$ini(Classes.ini,$chan,%classnext))
+          set %classtopname $ini(Classes.ini,$chan,%classnext)
+        }
+      }
+      inc %classnext
+    }
+    message $chan $iif(%classtopname != $null,You need $iif($calc(%classtop - %classtime) > 60,$round($calc($calc(%classtop - %classtime) / 60),1) more hours,$calc(%classtop - %classtime) more minute $+ $iif($calc(%classtop - %classtime) != 1,s)) on the stream to get the %classtopname class.,You have reached the maximum class.) 
+    unset %classnext
+    unset %classtop
+    unset %classtopname
+    unset %classtime
+  }
+  if ($2 = $null) {
+    message $chan $user($nick) -> Your class is $class($nick) $+ .
+  }
+}
+
+alias class {
+  unset %classtop
+  set %classtime $readini(ClassTimes.ini,$chan,$1)
+  set %classi 1
+  while (%classi <= $ini(ClassTimes.ini,$chan,0)) {
+    if ($readini(Classes.ini,$chan,$ini(Classes.ini,$chan,%classi)) <= %classtime) {
+      if ($readini(Classes.ini,$chan,$ini(Classes.ini,$chan,%classi)) >= $readini(Classes.ini,$chan,%classtop)) || (%classtop = $null) {
+        set %classtop $ini(Classes.ini,$chan,%classi)
+      }
+    }
+    inc %classi
+  }
+  unset %classi
+  unset %classtime
+  return $iif(%classtop,%classtop,[No Class])
+}
+
+alias classlevel {
+  return $iif($readini(CommandLevels.ini,$chan,!class) != $null, $readini(CommandLevels.ini,$chan,!class), 800)
+}
+
+on *:text:!level class &:#: {
+  if ($access <= 400) {
+    if ($3 isnum 1-900) {
+      writeini -n CommandLevels.ini $chan !class $3
+      message $chan $user($nick) -> The command userlevel for !class has been updated.
+    }
+    else {
+      message $chan $user($nick) -> You must enter a valid userlevel.
+    }
+  }
+}
