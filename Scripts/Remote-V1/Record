@@ -21,7 +21,7 @@ on *:text:!record*:#: {
 }
 
 alias recordlevel {
-  return $iif($readini(CommandLevels.ini,$chan,!record) != $null, $readini(CommandLevels.ini,$chan,!record), 800)
+  return $iif($CommandLevel(!record) != $null, $CommandLevel(!record), 800)
 }
 
 on *:text:!level !record &:#: {
