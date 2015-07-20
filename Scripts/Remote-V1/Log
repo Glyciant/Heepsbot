@@ -39,9 +39,16 @@ on *:text:!log *:#: {
     }
   }
   elseif ($2 = clear) {
-    set %clearname $readini(Requests.ini,$+($chan,.,$2),Name)
-    set %clearlevel $readini(Requests.ini,$+($chan,.,$2),Level)
-    set %clearcost $readini(Requests.ini,$+($chan,.,$2),Cost)
+    set %clearname $readini(Requests.ini,$+($chan,.,$3),Name)
+    set %clearlevel $readini(Requests.ini,$+($chan,.,$3),Level)
+    set %clearcost $readini(Requests.ini,$+($chan,.,$3),Cost)
+    remini Requests.ini $+($chan,.,$3)
+    writeini Requests.ini $+($chan,.,$3) Name %clearname
+    if (%clearlevel) { writeini Requests.ini $+($chan,.,$3) Level %clearlevel }
+    if (%clearcost) { writeini Requests.ini $+($chan,.,$3 Cost %clearcost }
+    unset %clearname
+    unset %clearlevel 
+    unset %clearcost
   }
   else {
     if ($readini(Requests.ini,$+($chan,.,$2),Name) != $null) {
