@@ -1,0 +1,86 @@
+; Script Name: Log.ini
+; Type: Optional
+; Credits - None
+; You may edit this script.
+
+on *:text:!log *:#: {
+  if ($2 = add) {
+    if ($access($nick) <= 400) {
+      if ($readini(Requests.ini,$+($chan,.,$3),Name) != $null) {
+        message $chan $user($nick) -> Ask Topic $3 already exists.
+      }
+      else {
+        if (-pc= isin $4) {
+          writeini -n Requests.ini $+($chan,.,$3) Cost $mid($4,5)
+        }
+        elseif (-ul isin $4) {
+          writeini -n Requests.ini $+($chan,.,$3) Level $mid($4,5)
+        }
+        if (-pc= isin $5) {
+          writeini -n Requests.ini $+($chan,.,$3) Cost $mid($5,5)
+        }
+        elseif (-ul= isin $5) {
+          writeini -n Requests.ini $+($chan,.,$3) Level $mid($5,5)
+        }
+        writeini -n Requests.ini $+($chan,.,$3) Name $3
+        message $chan $user($nick) -> Ask Topic $3 has been added.
+      }
+    }
+  }
+  elseif ($2 = remove) {
+    if ($access($nick) <= 400) {
+      if ($readini(Requests.ini,$+($chan,.,$3),Name) != $null) {
+        remini Requests.ini $+($chan,.,$3)
+        message $chan $user($nick) -> Ask Topic $3 has been removed.
+      }
+      else {
+        message $chan $user($nick) -> Ask Topic $3 does not exist.
+      }
+    }
+  }
+  elseif ($2 = clear) {
+    set %clearname $readini(Requests.ini,$+($chan,.,$2),Name)
+    set %clearlevel $readini(Requests.ini,$+($chan,.,$2),Level)
+    set %clearcost $readini(Requests.ini,$+($chan,.,$2),Cost)
+  }
+  else {
+    if ($readini(Requests.ini,$+($chan,.,$2),Name) != $null) {
+      if ($readini(Requests.ini,$+($chan,.,$2),Level) != $null) {
+        if ($access($nick) > $readini(Requests.ini,$+($chan,.,$2),Level) != $null) { return }
+      }
+      if ($readini(Requests.ini,$+($chan,.,$2),Cost) != $null) {
+      }
+      writeini -n Requests.ini $+($chan,.,$2) $nick $3-
+      message $chan $user($nick) -> Your message has been logged.
+    }
+  }
+}
+
+on *:text:!set log &:#: {
+  if ($3 = on) {
+    writeini -n BotSettings.ini $chan Logging ON
+    message $chan $user($nick) -> The logging feature has been enabled.
+  }
+  elseif ($3 = off) {
+    remini BotSettings.ini $chan Logging 
+    message $chan $user($nick) -> The logging feature has been disabled.
+  }
+}
+
+on *:text:*:#: {
+  if ($BotSetting(Logging) != $null) {
+    writeini -n ChatLog.ini $chan $ticks $+([,$time,]) [Message] $+([,$nick,]) $1-
+  }
+}
+
+on *:join:#: {
+  if ($BotSetting(Logging) != $null) {
+    writeini -n ChatLog.ini $chan $ticks $+([,$time,]) [Join] $+([,$nick,])
+  }
+}
+
+on *:part:#: {
+  if ($BotSetting(Logging) != $null) {
+    writeini -n ChatLog.ini $chan $ticks $+([,$time,]) [Part] $+([,$nick,])
+  }
+}
