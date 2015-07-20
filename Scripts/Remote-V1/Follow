@@ -8,8 +8,10 @@ ON *:PART:#: {
 }
 
 ON *:JOIN:#: {
-  set %stream_chan_ [ $+ [ $chan ] ] $owner
-  $+(timerfollowcheck.,$chan 0 5) twitch_check_new $chan %stream_chan_ [ $+ [ $chan ] ]
+  if ($nick = $me) {
+    set %stream_chan_ [ $+ [ $chan ] ] $owner
+    $+(timerfollowcheck.,$chan 0 5) twitch_check_new $chan %stream_chan_ [ $+ [ $chan ] ]
+  }
 }
 
 on *:text:!checkfollow &:#: {
