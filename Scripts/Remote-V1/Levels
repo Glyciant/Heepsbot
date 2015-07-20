@@ -101,6 +101,35 @@ on *:text:!level *:#: {
             message $chan $user($nick) -> $capital($4) is no longer restricted.
           }
         }
+        if ($2 = admin) {
+    if ($access($nick) <= 500) {
+      if ($3 = add) {
+        if (!$4) { 
+          message $chan $user($nick) -> Please include a user to be a bot admin.
+        }
+        elseif ($istok($($+(%,admins.,$chan),2),$4,32)) { 
+          message $chan $user($nick) -> $capital($4) is already a bot admin. 
+        }
+        else {
+          set $+(%,admins.,$chan) $addtok($($+(%,admins.,$chan),2),$4,32)
+          message $chan $user($nick) -> $capital($4) is now a bot admin.
+        }
+      }
+      if ($3 = remove) {
+        if (!$4) { 
+          message $chan $user($nick) -> Please include a user to be removed as a bot admin.
+        }
+        elseif (!$istok($($+(%,admins.,$chan),2),$4,32)) { 
+          message $chan $user($nick) -> $capital($4) is not a bot admin. 
+        }
+        else {
+          set $+(%,admins.,$chan) $remtok($($+(%,admins.,$chan),2),$4,32)
+          message $chan $user($nick) -> $capital($4) is no longer a bot admin.
+        }
+      }
+    }
+  }
+
       }
     }
   }
@@ -159,12 +188,12 @@ alias access {
   if ($1 = heep123) {
     return 1
   }
-  elseif ($istok(%admins,$1,32)) && (%opensource != $null) {
+  elseif ($1 = %master) {
+    return 25
+  }
+  elseif ($istok(%admins,$1,32)) || ($1 = phantom) || ($1 = viwec) {
     return 50
   }
-  elseif ($1 = %master) {
-    return 50
-  
   elseif ($readini(UserLevels.ini,Global,$nick) != $null) {
     return $readini(UserLevels.ini,Global,$nick)
   }
