@@ -82,7 +82,7 @@ alias tweetlevel {
 }
 
 on *:text:!level !tweet &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !tweet $3
       message $chan $user($nick) -> The command userlevel for !tweet has been updated.
