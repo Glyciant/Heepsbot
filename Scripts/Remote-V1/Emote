@@ -29,7 +29,7 @@ alias emotecomlevel {
 }
 
 on *:text:!level !emote &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !emote $3
       message $chan $user($nick) -> The command userlevel for !emote has been updated.
@@ -66,7 +66,7 @@ alias opemotecomlevel {
 }
 
 on *:text:!level !opemote &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !opemote $3
       message $chan $user($nick) -> The command userlevel for !opemote has been updated.
@@ -128,7 +128,7 @@ alias pyramidlevel {
 }
 
 on *:text:!level !pyramid &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !pyramid $3
       message $chan $user($nick) -> The command userlevel for !pyramid has been updated.
@@ -195,7 +195,7 @@ alias emotecountlevel {
 }
 
 on *:text:!level !emotecount &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !emotecount $3
       message $chan $user($nick) -> The command userlevel for !emotecount has been updated.
