@@ -241,7 +241,7 @@ alias ranklevel {
 }
 
 on *:text:!level rank &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !rank $3
       message $chan $user($nick) -> The command userlevel for !rank has been updated.
@@ -392,13 +392,13 @@ on *:text:*:#: {
       message $chan $user($nick) -> $Points have been reset.
     }
     elseif ($2 = on) {
-      if ($access <= 400) {
+      if ($access($nick) <= 400) {
         remini BotSettings.ini $chan NoPoints
         message $chan $user($nick) -> $Points have been enabled.
       }
     }
     elseif ($2 = off) {
-      if ($access <= 400) {
+      if ($access($nick) <= 400) {
         writeini -n BotSettings.ini $chan NoPoints True
         message $chan $user($nick) -> $Points have been disabled.
       }
