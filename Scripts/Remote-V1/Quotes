@@ -48,7 +48,7 @@ alias quotelevel {
 }
 
 on *:text:!level !quote &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !quote $3
       message $chan $user($nick) -> The command userlevel for !quote has been updated.
