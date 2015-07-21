@@ -1,5 +1,5 @@
-[Growing.Settings]
-Name=Growing
+[Small.Settings]
+Name=Small
 JoinPoints=True
 JoinPointsNum=20
 FollowPoints=True
@@ -11,4 +11,4 @@ Links=ON
 LinksMax=Purge
 Heist=True
 
-[Growing.Levels]
+[Small.Levels]
