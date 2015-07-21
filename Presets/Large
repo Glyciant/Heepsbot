@@ -1,9 +1,5 @@
 [Large.Settings]
 Name=Large
-PointTimerTime=60
-PointTimerPoint=1
-SubPoints=True
-SubPointsNum=100
 SubWelcome=ON
 Links=ON
 LinksMax=Short
