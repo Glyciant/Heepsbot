@@ -21,7 +21,7 @@ alias UptimeLevel {
 }
 
 on *:text:!level !uptime &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !uptime $3
       message $chan $user($nick) -> The command userlevel for !uptime has been updated.
