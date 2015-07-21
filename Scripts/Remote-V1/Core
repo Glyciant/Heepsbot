@@ -6,10 +6,10 @@
 alias master {
   if ($1) {
     set %master $1
-    echo Bot Master Set To: $capital(%master)
+    echo <System> Bot Master Set To: $capital(%master)
   }
   else {
-    echo Current Bot Master: $capital(%master)
+    echo <System> Current Bot Master: $capital(%master)
   }
 }
 
