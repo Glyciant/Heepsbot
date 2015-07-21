@@ -1,0 +1,14 @@
+[Growing.Settings]
+Name=Growing
+JoinPoints=True
+JoinPointsNum=20
+FollowPoints=True
+JoinPointsNum=50
+PointTimerTime=60
+PointTimerPoint=1
+AutoFollow=.
+Links=ON
+LinksMax=Purge
+Heist=True
+
+[Growing.Levels]
