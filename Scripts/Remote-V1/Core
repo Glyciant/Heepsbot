@@ -38,7 +38,7 @@ alias testlevel {
 }
 
 on *:text:!level !test &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 300-900) {
       writeini -n CommandLevels.ini $chan !test $3
       message $chan $user($nick) -> The command userlevel for !test has been updated.
@@ -112,7 +112,7 @@ alias shoutoutlevel {
 }
 
 on *:text:!level !shoutout &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !shoutout $3
       message $chan $user($nick) -> The command userlevel for !shoutout has been updated.
@@ -168,7 +168,7 @@ alias highlightlevel {
 }
 
 on *:text:!level !highlight &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !highlight $3
       message $chan $user($nick) -> The command userlevel for !highlight has been updated.
@@ -203,7 +203,7 @@ alias randomlevel {
 }
 
 on *:text:!level !random &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !random $3
       message $chan $user($nick) -> The command userlevel for !random has been updated.
@@ -235,7 +235,7 @@ alias lurklevel {
 }
 
 on *:text:!level !lurk &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !lurk $3
       message $chan $user($nick) -> The command userlevel for !lurk has been updated.
@@ -286,7 +286,7 @@ alias chatterslevel {
 }
 
 on *:text:!level !chatters &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 300-900) {
       writeini -n CommandLevels.ini $chan !chatters $3
       message $chan $user($nick) -> The command userlevel for !chatters has been updated.
@@ -315,7 +315,7 @@ alias moderatorslevel {
 }
 
 on *:text:!level !moderators &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 300-900) {
       writeini -n CommandLevels.ini $chan !moderators $3
       message $chan $user($nick) -> The command userlevel for !moderators has been updated.
@@ -342,7 +342,7 @@ alias botlevel {
 }
 
 on *:text:!level !bot &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 300-900) {
       writeini -n CommandLevels.ini $chan !bot $3
       message $chan $user($nick) -> The command userlevel for !bot has been updated.
@@ -364,7 +364,7 @@ alias saylevel {
 }
 
 on *:text:!level !say &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 300-900) {
       writeini -n CommandLevels.ini $chan !say $3
       message $chan $user($nick) -> The command userlevel for !say has been updated.
@@ -455,7 +455,7 @@ alias heepsbotlevel {
 
 on *:text:!level *:#: {
   if ($2 = !heepsbot) || ($2 = ! $+ $me) {
-    if ($access <= 400) {
+    if ($access($nick) <= 400) {
       if ($3 isnum 300-900) {
         writeini -n CommandLevels.ini $chan !heepsbot $3
         message $chan $user($nick) -> The command userlevel for ! $+ $me has been updated.
