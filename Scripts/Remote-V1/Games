@@ -42,7 +42,7 @@ alias lovelevel {
 }
 
 on *:text:!level !love &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !love $3
       message $chan $user($nick) -> The command userlevel for !love has been updated.
@@ -82,7 +82,7 @@ alias 8ballLevel {
 }
 
 on *:text:!level !8ball &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !8ball $3
       message $chan $user($nick) -> The command userlevel for !8ball has been updated.
@@ -187,7 +187,7 @@ alias roulettelevel {
 }
 
 on *:text:!level !roulette &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !roulette $3
       message $chan $user($nick) -> The command userlevel for !roulette has been updated.
@@ -235,7 +235,7 @@ alias seppukulevel {
 }
 
 on *:text:!level !seppuku &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !seppuku $3
       message $chan $user($nick) -> The command userlevel for !seppuku has been updated.
@@ -357,7 +357,7 @@ alias heistlevel {
 }
 
 on *:text:!level !heist &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !heist $3
       message $chan $user($nick) -> The command userlevel for !heist has been updated.
