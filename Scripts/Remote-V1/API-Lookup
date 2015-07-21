@@ -280,9 +280,6 @@ on *:text:!level *:#: {
       if ($2 = !viewers) {
         writeini -n CommandLevels.ini $chan !Viewers $3
       }
-      if ($2 = !chatters) {
-        writeini -n CommandLevels.ini $chan !Chatters $3
-      }
       if ($2 = !emotes) {
         writeini -n CommandLevels.ini $chan !Emotes $3
       }
