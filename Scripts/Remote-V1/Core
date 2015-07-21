@@ -50,40 +50,41 @@ on *:text:!level !test &:#: {
 }
 
 alias BotSetting {
-  if ($readini(BotSettings.ini,$chan,Preset) = $null) {
-    return $readini(BotSettings.ini, $iif($2,$2,$chan), $1)
-  }
-  else {
-    return $readini(Presets.ini, $+($readini(BotSettings.ini, $chan, Preset),.,Settings), $1)
-  }
+  return $readini(BotSettings.ini, $iif($2,$2,$chan), $1)
 }
 
 alias CommandLevel {
-  if ($readini(BotSettings.ini,$chan,Preset) = $null) {
-    return $readini(CommandLevels.ini, $chan, $1)
-  }
-  else {
-    return $readini(Presets.ini, $+($readini(CommandLevels.ini, $chan, Preset),.,CommandLevels), $1)
-  }
+  return $readini(CommandLevels.ini, $chan, $1)
 }
 
 on *:text:!preset*:#: {
   if ($access($nick) <= 300) {
-    if ($2 = off) {
-      remini BotSettings.ini $chan Preset
-      message $chan $user($nick) -> The preset has been removed.
-    }
-    elseif ($2) {
+    if ($2) {
       if ($readini(Presets.ini,$+($2,.,Settings),Name) != $null) {
-        writeini -n BotSettings.ini $chan Preset $capital($2)
-        message $chan $user($nick) -> The bot settings preset has been updated.
+        set %preseti 2
+        set %1 $ini(Presets.ini,$+($2,.,Settings),%preseti)
+        set %2 $readini(Presets.ini,$chan,$ini(Presets.ini,$+($2,.,Settings),%preseti))
+        remini BotSettings.ini $chan
+        while (%preseti <= $ini(Presets.ini,$+($2,.,Settings),0)) {
+          writeini BotSettings.ini $chan $ini(Presets.ini,$+($2,.,Settings),%preseti) $readini(Presets.ini,$+($2,.,Settings),$ini(Presets.ini,$+($2,.,Settings),%preseti))
+          inc %preseti
+        }
+        set %preseti 1
+        remini CommandLevels.ini $chan
+        while (%preseti <= $ini(Presets.ini,$+($2,.,Levels),0)) {
+          writeini CommandLevels.ini $chan $ini(Presets.ini,$+($2,.,Levels),%preseti) $readini(Presets.ini,$+($2,.,Settings),$ini(Presets.ini,$+($2,.,Levels),%preseti))
+          inc %preseti
+        }
+        unset %preseti
+        message $chan $user($nick) -> The settings preset has been updated. The bot will now restart.
+        reconnect $chan 
       }
       else {
         message $chan $user($nick) -> The preset you have chosen does not exist or is not loaded.
       }
     }
     else {
-      message $chan $iif($readini(BotSettings.ini,$chan,Preset) != $null, This channel is currently using the $readini(BotSettings.ini,$chan,Preset) preset.,This channel is not currently using a preset.)
+      message $chan $user($nick) -> You must include a preset to use.
     }
   }
 }
