@@ -9,17 +9,12 @@ Links=ON
 LinksMax=Short
 Caps=ON
 CapsMax=Short
-Caps=Symbols
-CapsMax=Symbols
+Symbols=True
+SymbolsMax=Short
 Heist=True
 
 [Medium.Levels]
 !shoutout=600
-!uptime=700
-!say=600
-!chatters=600
-!moderators=600
-!bot=600
 !title=600
 !game=600
 !followers=600
