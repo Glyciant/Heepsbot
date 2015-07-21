@@ -58,7 +58,7 @@ alias CommandLevel {
 }
 
 on *:text:!preset*:#: {
-  if ($access($nick) <= 300) {
+  if ($access($nick) <= 350) {
     if ($2) {
       if ($readini(Presets.ini,$+($2,.,Settings),Name) != $null) {
         set %preseti 2
@@ -164,7 +164,7 @@ on *:sockclose:highlight:{
 }
 
 alias highlightlevel {
-  return $iif$CommandLevel(!highlight) != $null, $CommandLevel(!highlight), 300)
+  return $iif$CommandLevel(!highlight) != $null, $CommandLevel(!highlight), 350)
 }
 
 on *:text:!level !highlight &:#: {
@@ -401,7 +401,7 @@ on *:text:*:#: {
       }
     }
     elseif ($2 = remove) {
-      if ($access($nick) <= 300) {
+      if ($access($nick) <= 350) {
         message $chan $user($nick) -> Leaving Channel
         part $chan
       }
@@ -438,7 +438,7 @@ on *:text:*:#: {
       }
     }
     elseif ($2 = server) {
-      if ($access($nick) <= 50) {
+      if ($access($nick) <= 250) {
         message $chan $user($nick) -> Reconnecting...
         server
       }
