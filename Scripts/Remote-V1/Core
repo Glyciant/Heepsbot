@@ -377,10 +377,18 @@ on *:text:!level !say &:#: {
 
 on *:join:#: {
   if ($nick = $me) {
-    write -c Presets.ini
+    if (!$exists(Presets.ini)) {
+      write -c Presets.ini
+    }
     set %comma $chr(44)
+    set %hash $chr(35)
     $+(timerantilockout.,$chan 0 65) remini AntiGlobal.ini AntiGlobal $chan
-    message $chan Hello! I'm $capital($me) $+ , a Twitch Chat Bot running on scripts by Heep123. Thank you for using me to moderate your channel! <3
+    if ($chan != #heepsbot) {
+      message $chan Hello! I'm $capital($me) $+ , an open-source chat bot made by Heep123. Thanks for choosing me to moderate this channel! <3
+    }
+    elseif ($chan = #heepsbot) {
+      message $chan Hello! I'm $capital($me) $+ . $iif(%master,My bot master is $capital(%master),I currently do not have a defined bot master.)
+    }
   }
 }
 
@@ -388,7 +396,8 @@ on *:text:*:#: {
   if ($1 = ! $+ $me) {
     if (!$2) {
       if ($access($nick) <= 500) {
-        message $chan $user($nick) -> Insufficient Parameters! Usage: $($+(%,botcom.,$chan),2)) <remove // reconnect // moderate // commands // antiglobal>  
+        message $chan $user($nick) -> Insufficient Parameters! Usage: ! $+ $me <remove // reconnect // moderate // commands // antiglobal // server // twitter // wiki>  
+
       }
     }
     elseif ($2 = remove) {
@@ -489,6 +498,8 @@ on *:connect: {
     timerdaymessages off
     timerdaymessages -o 0 86400 unset %daymessages
     /raw CAP REQ :twitch.tv/membership
+    /raw CAP REQ :twitch.tv/commands
+    /join #heepsbot
   }
 }
 
