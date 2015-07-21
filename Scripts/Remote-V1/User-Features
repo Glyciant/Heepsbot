@@ -256,7 +256,7 @@ alias classlevel {
 }
 
 on *:text:!level class &:#: {
-  if ($access <= 400) {
+  if ($access($nick) <= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !class $3
       message $chan $user($nick) -> The command userlevel for !class has been updated.
