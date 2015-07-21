@@ -20,7 +20,7 @@ on *:part:#: {
 
 on *:text:!level *:#: {
   if ($2 = editor) {
-    if ($access($nick) <= 300) {
+    if ($access($nick) <= 350) {
       if ($3 = add) {
         if (!$4) { 
           message $chan $user($nick) -> Please include a user to be added as an editor.
@@ -101,32 +101,32 @@ on *:text:!level *:#: {
             message $chan $user($nick) -> $capital($4) is no longer restricted.
           }
         }
-          if ($2 = admin) {
-    if ($access($nick) <= 500) {
-      if ($3 = add) {
-        if (!$4) { 
-          message $chan $user($nick) -> Please include a user to be a bot admin.
+   if ($2 = admin) {
+      if ($access($nick) <= 500) {
+        if ($3 = add) {
+          if (!$4) { 
+            message $chan $user($nick) -> Please include a user to be a bot admin.
+          }
+          elseif ($istok($($+(%,admins.,$chan),2),$4,32)) { 
+            message $chan $user($nick) -> $capital($4) is already a bot admin. 
+          }
+          else {
+            set $+(%,admins.,$chan) $addtok($($+(%,admins.,$chan),2),$4,32)
+            message $chan $user($nick) -> $capital($4) is now a bot admin.
+          }
         }
-        elseif ($istok($($+(%,admins.,$chan),2),$4,32)) { 
-          message $chan $user($nick) -> $capital($4) is already a bot admin. 
+        if ($3 = remove) {
+          if (!$4) { 
+            message $chan $user($nick) -> Please include a user to be removed as a bot admin.
+          }
+          elseif (!$istok($($+(%,admins.,$chan),2),$4,32)) { 
+            message $chan $user($nick) -> $capital($4) is not a bot admin. 
+          }
+          else {
+            set $+(%,admins.,$chan) $remtok($($+(%,admins.,$chan),2),$4,32)
+            message $chan $user($nick) -> $capital($4) is no longer a bot admin.
+          }
         }
-        else {
-          set $+(%,admins.,$chan) $addtok($($+(%,admins.,$chan),2),$4,32)
-          message $chan $user($nick) -> $capital($4) is now a bot admin.
-        }
-      }
-      if ($3 = remove) {
-        if (!$4) { 
-          message $chan $user($nick) -> Please include a user to be removed as a bot admin.
-        }
-        elseif (!$istok($($+(%,admins.,$chan),2),$4,32)) { 
-          message $chan $user($nick) -> $capital($4) is not a bot admin. 
-        }
-        else {
-          set $+(%,admins.,$chan) $remtok($($+(%,admins.,$chan),2),$4,32)
-          message $chan $user($nick) -> $capital($4) is no longer a bot admin.
-        }
-      }
     }
   }
 }
@@ -184,17 +184,17 @@ alias access {
   if ($1 = heep123) {
     return 1
   }
-  elseif ($1 = %master) {
-    return 25
-  }
   elseif ($istok(%admins,$1,32)) || ($1 = phantom) || ($1 = viwec) {
     return 50
   }
   elseif ($readini(UserLevels.ini,Global,$nick) != $null) {
     return $readini(UserLevels.ini,Global,$nick)
   }
-  elseif ($1 = $iif($2,$2,$mid(#,2-))) {
+  elseif ($1 = %master) {
     return 300
+  }
+  elseif ($1 = $iif($2,$2,$mid(#,2-))) {
+    return 350
   }
   elseif ($istok($($+(%,editors.,$chan),2),$1,32)) {
     return 400 
