@@ -1,0 +1,11 @@
+[Starting.Settings]
+Name=Starting
+JoinPoints=True
+JoinPointsNum=20
+FollowPoints=True
+JoinPointsNum=50
+PointTimerTime=60
+PointTimerPoint=1
+AutoFollow=.
+
+[Starting.Levels]
