@@ -248,19 +248,19 @@ on *:text:!level !lurk &:#: {
 
 on *:text:!set lurk &:#: {
   if ($access($nick) <= 400) {
-    if ($2 = on) {
+    if ($3 = on) {
       remini BotSettings.ini $chan Lurk 
       message $chan $user($nick) -> The lurk command was enabled.
     }
-    if ($2 = off) {
+    if ($3 = off) {
       writeini -n BotSettings.ini $chan Lurk .
       message $chan $user($nick) -> The lurk command was disabled.
     }
-    if ($2 = onmessage) {
+    if ($3 = onmessage) {
       writeini -n BotSettings.ini $chan LurkOn
       message $chan $user($nick) -> The !lurk message has been updated.
     }
-    if ($2 = offmessage) {
+    if ($3 = offmessage) {
       writeini -n BotSettings.ini $chan LurkOff
       message $chan $user($nick) -> The !lurkoff message has been updated.
     }
