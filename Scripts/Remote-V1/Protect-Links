@@ -165,8 +165,15 @@ on *:text:!forget links *:#: {
   }
 }
 
+on *:text:!domain add &:#heepsbot: {
+  if ($access($nick) <= 250) {
+    set %domains $addtok(%domains,$3,32)
+    message $chan $user($nick) -> Domain $3 has been added to the protection.
+  }
+}
+
 on *:text:*:#:{
-  if ((.com isin $1-) || (.co isin $1-) || (.uk isin $1-) || (.edu isin $1-) || (.gov isin $1-) || (.mil isin $1-) || (.net isin $1-) || (.org isin $1-) || (.biz isin $1-) || (.me isin $1-) || (.info isin $1-) || (.de isin $1-) || (.fr isin $1-) || (.name isin $1-) || (.us isin $1-) || (.ca isin $1-) || (.su isin $1-) || (.pt isin $1-) || (.tv isin $1-) || (.ru isin $1-) || (.cl isin $1-) || (.sh isin $1-) || (.scr isin $1-) || (.ar isin $1) || (.ac isin $1-)) {
+  if ((.com isin $1-) || (.co isin $1-) || (.uk isin $1-) || (.edu isin $1-) || (.gov isin $1-) || (.mil isin $1-) || (.net isin $1-) || (.org isin $1-) || (.biz isin $1-) || (.me isin $1-) || (.info isin $1-) || (.de isin $1-) || (.fr isin $1-) || (.name isin $1-) || (.us isin $1-) || (.ca isin $1-) || (.su isin $1-) || (.pt isin $1-) || (.tv isin $1-) || (.ru isin $1-) || (.cl isin $1-) || (.sh isin $1-) || (.scr isin $1-) || (.ar isin $1) || (.ac isin $1-) || ($regex($1-,$+(/(?<![a-z\d])\Q,$replacecs(%domains,\E,\\E\Q,$chr(32),\E|\Q),\E(?![a-z\d])/Si)))) {
     if ($BotSetting(Links) != $null) {
       if ($access($nick) <= $iif($BotSetting(LinksSafe) != $null,$BotSetting(LinksSafe),600)) { return }
       if ($($+(%,permit.,$chan,.,$nick),2)) { unset $+(%,permit.,$chan,.,$nick) | return }
