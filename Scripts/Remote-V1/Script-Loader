@@ -1,0 +1,77 @@
+alias scripts {
+  if ($1 = load) {
+    load -rsN scripts\Bot\ApiLookup.ini
+    load -rsN scripts\Bot\AutoWelcome.ini
+    load -rsN scripts\Bot\Betting.ini
+    load -rsN scripts\Bot\Commands.ini
+    load -rsN scripts\Bot\Core.ini
+    load -rsN scripts\Bot\Countdown.ini
+    load -rsN scripts\Bot\Echo.ini
+    load -rsN scripts\Bot\Emote.ini
+    load -rsN scripts\Bot\Follow.ini
+    load -rsN scripts\Bot\Games.ini
+    load -rsN scripts\Bot\Hosting.ini
+    load -rsN scripts\Bot\Levels.ini
+    load -rsN scripts\Bot\Log.ini
+    load -rsN scripts\Bot\Moderation.ini
+    load -rsN scripts\Bot\OnlineCheck.ini
+    load -rsN scripts\Bot\Points.ini
+    load -rsN scripts\Bot\Poll_Raffle.ini
+    load -rsN scripts\Bot\ProtectActions.ini
+    load -rsN scripts\Bot\ProtectASCII.ini
+    load -rsN scripts\Bot\ProtectBlacklist.ini
+    load -rsN scripts\Bot\ProtectCaps.ini
+    load -rsN scripts\Bot\ProtectEmotes.ini
+    load -rsN scripts\Bot\ProtectLinks.ini
+    load -rsN scripts\Bot\ProtectLones.ini
+    load -rsN scripts\Bot\ProtectParagraph.ini
+    load -rsN scripts\Bot\ProtectRepeat.ini
+    load -rsN scripts\Bot\ProtectSymbols.ini
+    load -rsN scripts\Bot\ProtectUsernames.ini
+    load -rsN scripts\Bot\Quotes.ini
+    load -rsN scripts\Bot\Record.ini
+    load -rsN scripts\Bot\SubWelcome.ini
+    load -rsN scripts\Bot\Tweet.ini
+    load -rsN scripts\Bot\Uptime.ini
+    load -rsN scripts\Bot\UserFeatures.ini
+  }
+  elseif ($1 = unload) {
+    unload -rsN scripts\Bot\ApiLookup.ini
+    unload -rsN scripts\Bot\AutoWelcome.ini
+    unload -rsN scripts\Bot\Betting.ini
+    unload -rsN scripts\Bot\Commands.ini
+    unload -rsN scripts\Bot\Core.ini
+    unload -rsN scripts\Bot\Countdown.ini
+    unload -rsN scripts\Bot\Echo.ini
+    unload -rsN scripts\Bot\Emote.ini
+    unload -rsN scripts\Bot\Follow.ini
+    unload -rsN scripts\Bot\Games.ini
+    unload -rsN scripts\Bot\Hosting.ini
+    unload -rsN scripts\Bot\Levels.ini
+    unload -rsN scripts\Bot\Log.ini
+    unload -rsN scripts\Bot\Moderation.ini
+    unload -rsN scripts\Bot\OnlineCheck.ini
+    unload -rsN scripts\Bot\Points.ini
+    unload -rsN scripts\Bot\Poll_Raffle.ini
+    unload -rsN scripts\Bot\ProtectActions.ini
+    unload -rsN scripts\Bot\ProtectASCII.ini
+    unload -rsN scripts\Bot\ProtectBlacklist.ini
+    unload -rsN scripts\Bot\ProtectCaps.ini
+    unload -rsN scripts\Bot\ProtectEmotes.ini
+    unload -rsN scripts\Bot\ProtectLinks.ini
+    unload -rsN scripts\Bot\ProtectLones.ini
+    unload -rsN scripts\Bot\ProtectParagraph.ini
+    unload -rsN scripts\Bot\ProtectRepeat.ini
+    unload -rsN scripts\Bot\ProtectSymbols.ini
+    unload -rsN scripts\Bot\ProtectUsernames.ini
+    unload -rsN scripts\Bot\Quotes.ini
+    unload -rsN scripts\Bot\Record.ini
+    unload -rsN scripts\Bot\SubWelcome.ini
+    unload -rsN scripts\Bot\Tweet.ini
+    unload -rsN scripts\Bot\Uptime.ini
+    unload -rsN scripts\Bot\UserFeatures.ini
+  }
+  else {
+    echo -a Usage /scripts (load|unload)
+  }
+}
