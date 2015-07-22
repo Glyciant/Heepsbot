@@ -156,33 +156,91 @@ on *:text:!forget blacklist *:#: {
 
 on *:text:!blacklist add*:#: {
   if ($access($nick) <= 400) {
-    if (!$3) { 
-      message $chan $user($nick) -> Please include a word to be added to the blacklist.
-    }
-    elseif ($istok($($+(%,badwords.,$chan),2),$3,32)) { 
-      message $chan $user($nick) -> That word is already on the list. 
+    if ($3 = regex) && ($4) {
+      set %regexj 1
+      while (%regexj <= $ini(Regex.ini,$chan,0)) {
+        if ($readini(Regex.ini,n,$chan,$ini(Regex.ini,$chan,%regexj)) = $4) {
+          set %regexk $ini(Regex.ini,$chan,%regexj)
+        }
+        inc %regexj
+      }
+      if (!$4) { 
+        message $chan $user($nick) -> Please include an expression to be added to the blacklist.
+      }
+      elseif (%regexk) {
+        message $chan $user($nick) -> That expression is already banned.
+      }
+      else {
+        writeini -n Regex.ini $chan $ticks $4
+        message $chan $user($nick) -> That expression is now banned.
+      }
+      unset %regexk
     }
     else {
-      set $+(%,badwords.,$chan) $addtok($($+(%,badwords.,$chan),2),$3,32)
-      message $chan $user($nick) -> That word is now banned.
+      if (!$3) { 
+        message $chan $user($nick) -> Please include a word to be added to the blacklist.
+      }
+      elseif ($istok($($+(%,badwords.,$chan),2),$3,32)) { 
+        message $chan $user($nick) -> That word is already on the list. 
+      }
+      else {
+        set $+(%,badwords.,$chan) $addtok($($+(%,badwords.,$chan),2),$3,32)
+        message $chan $user($nick) -> That word is now banned.
+      }
     }
+  }
+}
+
+on *:text:!blacklist list*:#: {
+  if ($access($nick) <= 400) {
+    set %regexu 1
+    while (%regexu <= $ini(Regex.ini,$chan,0)) {
+      set %regexy %regexy $+ $chr(32) $+ $readini(Regex.ini,$chan,$ini(Regex.ini,$chan,%regexu)) $+ %comma
+      inc %regexu
+    }
+    message $chan $user($nick) -> Banned Words: $iif($replace($($+(%,badwords.,$chan),2),DoNotRemoveMeFromBlacklist,$null),$($+(%,badwords.,$chan),2),[None])
+    message $chan $user($nick) -> Banned Expressions: $iif(%regexy,%regexy,[None])
+    unset %regexy
+    unset %regexu
   }
 }
 
 on *:text:!blacklist remove*:#: {
   if ($access($nick) <= 400) {
-    if (!$3) { 
-      message $chan $user($nick) -> Please include a word to be removed from the blacklist.
-    }
-    elseif (!$istok($($+(%,badwords.,$chan),2),$3,32)) { 
-      message $chan $user($nick) -> That word is not on the list.
-    }
-    elseif ($3 = DoNotRemoveMeFromBlacklist) {
-      message $chan $user($nick) -> This string cannot be removed.
+    if ($3 = regex) && ($4) {
+      set %regexj 1
+      while (%regexj <= $ini(Regex.ini,$chan,0)) {
+        if ($readini(Regex.ini,n,$chan,$ini(Regex.ini,$chan,%regexj)) = $4) {
+          set %regexk $ini(Regex.ini,$chan,%regexj)
+        }
+        inc %regexj
+      }
+      if (!$4) { 
+        message $chan $user($nick) -> Please include an expression to be removed the blacklist.
+      }
+      elseif (!%regexk) {
+        message $chan $user($nick) -> That expression is not banned.
+      }
+      else {
+        remini -n Regex.ini $chan %regexk
+        message $chan $user($nick) -> That expression is no longer banned.
+      }
+      unset %regexk
     }
     else {
-      set $+(%,badwords.,$chan) $remtok($($+(%,badwords.,$chan),2),$3,1,32)
-      message $chan $user($nick) -> That word will no longer be banned.
+      if (!$3) { 
+        message $chan $user($nick) -> Please include a word to be removed from the blacklist.
+      }
+      elseif (!$istok($($+(%,badwords.,$chan),2),$3,32)) { 
+        message $chan $user($nick) -> That word is not on the list.
+      }
+      elseif ($3 = DoNotRemoveMeFromBlacklist) {
+        message $chan $user($nick) -> This string cannot be removed.
+      }
+      else {
+        set $+(%,badwords.,$chan) $remtok($($+(%,badwords.,$chan),2),$3,1,32)
+        message $chan $user($nick) -> That word will no longer be banned.
+      }
     }
   }
 }
@@ -192,6 +250,15 @@ on *:action:*:#:{
     if ($regex($1-,$+(/(?<![a-z\d])\Q,$replacecs($($+(%,badwords.,$chan),2),\E,\\E\Q,$chr(32),\E|\Q),\E(?![a-z\d])/Si))) {
       ProtectBlacklist $nick
     }
+    else {
+      set %regexi 1
+      while (%regexi <= $ini(Regex.ini,$chan,0)) {
+        if ($regex($1-,$readini(Regex.ini,n,$chan,$ini(Regex.ini,$chan,%regexi)))) {
+          ProtectBlacklist $nick
+        }
+        inc %regexi
+      }
+    }
   }
 }
 
@@ -199,6 +266,16 @@ on *:text:*:#:{
   if ($BotSetting(Blacklist) != $null) {
     if ($regex($1-,$+(/(?<![a-z\d])\Q,$replacecs($($+(%,badwords.,$chan),2),\E,\\E\Q,$chr(32),\E|\Q),\E(?![a-z\d])/Si))) {
       ProtectBlacklist $nick
+    }
+    else {
+      set %regexi 1
+      while (%regexi <= $ini(Regex.ini,$chan,0)) {
+        if ($regex($1-,$readini(Regex.ini,n,$chan,$ini(Regex.ini,$chan,%regexi)))) {
+          ProtectBlacklist $nick
+        }
+        inc %regexi
+      }
+      unset %regexi
     }
   }
 }
