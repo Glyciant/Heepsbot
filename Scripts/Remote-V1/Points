@@ -66,7 +66,7 @@ on *:text:!autopoints*:#: {
       }
       if ($3 = off) {
         remini BotSettings.ini $chan PointsTimer
-        $+(timerpoints.,$chan* off)
+        $+(timerpoints.,$chan off)
         message $chan $user($nick) -> $points timer has been disabled.
       }
       if ($3 = points) {
@@ -84,18 +84,28 @@ on *:text:!autopoints*:#: {
     }
   }
 }
+
+on *:join:#:{
+  if ($BotSetting(PointsTimer) != $null) {
+    $+(timerpoints.,$chan 0 $iif($BotSetting(PointTimerTime) != $null,$BotSetting(PointTimerTime),60) TimedPoints $chan $iif($BotSetting(PointTimerPoint) != $null,$BotSetting(PointTimerPoint),1))
+  }
+  if ($BotSetting(JoinPoints) != $null) {
+    writeini PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) + $BotSettings(JoinPointsNum))
+  }
+}
+
 on *:part:#: {
   $+(timerpoints.,$chan off)
 }
 
 alias TimedPoints {
+  set $+(%,p.,$1) 1
   while ($($+(%,p.,$1),2) <= $nick($1,0,a)) {
     set $+(%,puser.,$1) $nick($1,$($+(%,p.,$1),2),a)
-    writeini -n PointsUpdated.ini $chan $($+(%,puser.,$1),2) $calc($readini(PointsUpdated.ini,$chan,$($+(%,puser.,$1),2)) $iif($2 == add,+,-) $iif($BotSetting( PointTimerPoint) != $null,$BotSetting( PointTimerPoint),1)
+    writeini -n PointsUpdated.ini $1 $($+(%,puser.,$1),2) $calc($readini(PointsUpdated.ini,$1,$($+(%,puser.,$1),2)) + $2)
     inc $+(%,p.,$1)
   }  
 }
-
 alias points {
   return $iif($BotSetting(PointsName) != $null,$BotSetting(PointsName),Points)
 }
