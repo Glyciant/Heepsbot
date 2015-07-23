@@ -326,7 +326,7 @@ on *:text:!level !moderators &:#: {
   }
 }
 
-on *:text:!bot *:#: {
+on *:text:!bot*:#: {
   if ($access($nick) <= $botlevel) {
     if ($2) {
       message $chan $2 -> I am $capital($me) $+ : a bot running on scripts created by Heep123.
