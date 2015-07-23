@@ -28,7 +28,7 @@ on *:text:!autopoints*:#: {
         message $chan $user($nick) -> Users will now automatically be given $4 $points when they follow the channel.
       }
       elseif ($3 = on) {
-        if ($BotSetting( SubPointsNum) = $null) {
+        if ($BotSetting( FollowPointsNum) = $null) {
           writeini -n BotSettings.ini $chan FollowPointsNum 50
         }
         writeini -n BotSettings.ini $chan FollowPoints True
@@ -84,16 +84,6 @@ on *:text:!autopoints*:#: {
     }
   }
 }
-
-on *:join:#:{
-  if ($BotSetting( PointTimer) != $null) {
-    $+(timerpoints.,$chan 0 $iif($BotSetting( PointTimerTime) != $null,$BotSetting( PointTimerTime),60) TimedPoints $chan $nick $iif($BotSetting( PointTimerPoint) != $null,$BotSetting( PointTimerPoint),1)
-  }
-  if ($BotSetting(JoinPoints) != $null) {
-    writeini PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) + $BotSettings(JoinPointsNum))
-  }
-}
-
 on *:part:#: {
   $+(timerpoints.,$chan off)
 }
