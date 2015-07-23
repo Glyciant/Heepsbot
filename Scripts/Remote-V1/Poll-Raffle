@@ -133,7 +133,7 @@ on *:text:!raffle random:#: {
 
 on *:text:!raffle open*:#: {
   if ($access($nick) <= 400) {
-    if ($BotSetting( RaffleStatus) = reset) {
+    if ($BotSetting( RaffleStatus) = reset) || ($BotSetting( RaffleStatus) = $null) {
       writeini -n BotSettings.ini $chan RaffleStatus Open
       if (-pc= isin $5) {
         writeini -n BotSettings.ini $chan RaffleCost $mid($5,5)
