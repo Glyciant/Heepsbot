@@ -60,13 +60,13 @@ on *:text:!followers:#: {
 alias followers {
   if (!$1) { return }
   unset %message
-  set %u https://api.twitch.tv/kraken/channels/ $+ $1
-  set %v twcf_ $+ $ticks
-  JSONOpen -ud %v %u
-  set %message $json(%v,followers) 
-  JSONClose %v
-  unset %v
-  unset %u
+  set %uu https://api.twitch.tv/kraken/channels/ $+ $1
+  set %vv twcf_ $+ $ticks
+  JSONOpen -ud %vv %uu
+  set %message $json(%vv,followers) 
+  JSONClose %vv
+  unset %vv
+  unset %uu
   if (!%message) { return [Error] }
   elseif (%message) { return %message }
 }
@@ -81,13 +81,13 @@ on *:text:!following:#: {
 alias following {
   if (!$1) { return }
   unset %message
-  set %u https://api.twitch.tv/kraken/users/ $+ $1 $+ /follows/channels/
-  set %v twcf_ $+ $ticks
-  JSONOpen -ud %v %u
-  set %message $json(%v,_total) 
-  JSONClose %v
-  unset %v
-  unset %u
+  set %uu https://api.twitch.tv/kraken/users/ $+ $1 $+ /follows/channels/
+  set %vv twcf_ $+ $ticks
+  JSONOpen -ud %vv %uu
+  set %message $json(%vv,_total) 
+  JSONClose %vv
+  unset %vv
+  unset %uu
   if (!%message) { return [Error] }
   elseif (%message) { return %message }
 }
@@ -101,19 +101,19 @@ on *:text:!partnership:#: {
 
 alias tw_check_partner {
   if (!$1) { return }
-  set %u https://api.twitch.tv/kraken/channels/ $+ $1
-  set %v twcf_ $+ $ticks
-  JSONOpen -ud %v %u
-  set %message $json(%v,partner) 
+  set %uu https://api.twitch.tv/kraken/channels/ $+ $1
+  set %vv twcf_ $+ $ticks
+  JSONOpen -ud %vv %uu
+  set %message $json(%vv,partner) 
   :end
   if (%message = $true) { message $3 $capital($1) is a partnered Twitch channel. }
   elseif (%message = $false) { message $3 $capital($1) is not a partnered Twitch channel. }
   else { message $3 $user($nick) -> Could not find partnership information for $capital($1) $+ . }
   :end2
-  JSONClose %v
-  unset %v
+  JSONClose %vv
+  unset %vv
   unset %message
-  unset %u
+  unset %uu
 }
 
 on *:text:!title:#: {
@@ -126,13 +126,13 @@ on *:text:!title:#: {
 alias title {
   if (!$1) { return }
   unset %message
-  set %u https://api.twitch.tv/kraken/channels/ $+ $1
-  set %v twcf_ $+ $ticks
-  JSONOpen -ud %v %u
-  JSONClose %v
-  set %message $json(%v,status)    
-  unset %v
-  unset %u
+  set %uu https://api.twitch.tv/kraken/channels/ $+ $1
+  set %vv twcf_ $+ $ticks
+  JSONOpen -ud %vv %uu
+  set %message $json(%vv,status)
+  JSONClose %vv    
+  ;unset %vv
+  ;unset %uu
   if (!%message) { return [No Title] }
   elseif (%message) { return %message }
 }
@@ -147,13 +147,13 @@ on *:text:!game:#: {
 alias game {
   if (!$1) { return }
   unset %message
-  set %u https://api.twitch.tv/kraken/channels/ $+ $1
-  set %v twcf_ $+ $ticks
-  JSONOpen -ud %v %u
-  set %message $json(%v,game) 
-  JSONClose %v
-  unset %v
-  unset %u
+  set %uu https://api.twitch.tv/kraken/channels/ $+ $1
+  set %vv twcf_ $+ $ticks
+  JSONOpen -ud %vv %uu
+  set %message $json(%vv,game) 
+  JSONClose %vv
+  unset %vv
+  unset %uu
   if (!%message) { return [No Type] }
   elseif (%message) { return %message }
 }
@@ -168,13 +168,13 @@ on *:text:!viewers:#: {
 alias viewers {
   if (!$1) { return }
   unset %message
-  set %u https://api.twitch.tv/kraken/streams/ $+ $1
-  set %v twcf_ $+ $ticks
-  JSONOpen -ud %v %u
-  set %message $json(%v,viewers) 
-  JSONClose %v
-  unset %v
-  unset %u
+  set %uu https://api.twitch.tv/kraken/streams/ $+ $1
+  set %vv twcf_ $+ $ticks
+  JSONOpen -ud %vv %uu
+  set %message $json(%vv,viewers) 
+  JSONClose %vv
+  unset %vv
+  unset %uu
   if (!%message) { return [No Viewers] }
   elseif (%message) { return %message }
 }
@@ -189,21 +189,21 @@ on *:text:!emotes:#: {
 alias tw_check_emotes {
   if (!$1) { return }
   set %m 0
-  set %u https://api.twitch.tv/kraken/chat/ $+ $1 $+ /emoticons
-  set %v twcf_ $+ $ticks
-  JSONOpen -ud %v %u
-  set %message $json(%v,emoticons,%m,subscriber_only) 
+  set %uu https://api.twitch.tv/kraken/chat/ $+ $1 $+ /emoticons
+  set %vv twcf_ $+ $ticks
+  JSONOpen -ud %vv %uu
+  set %message $json(%vv,emoticons,%m,subscriber_only) 
   :end
   if (%message = $false) { message $3 $capital($1) does not have any subscriber emotes. }
   elseif (%message = $true) { 
-    set %emotes $json(%v,emoticons,%m,regex) $+ %comma
+    set %emotes $json(%vv,emoticons,%m,regex) $+ %comma
     inc %m
     while (%m != Stop_Emote_Check) {
-      if ($json(%v,emoticons,%m,subscriber_only) = $false) {
+      if ($json(%vv,emoticons,%m,subscriber_only) = $false) {
         set %m Stop_Emote_Check
       }
       else {
-        set %emotes %emotes $json(%v,emoticons,%m,regex) $+ %comma
+        set %emotes %emotes $json(%vv,emoticons,%m,regex) $+ %comma
         inc %m
       }
     }
@@ -213,9 +213,9 @@ alias tw_check_emotes {
   }
   unset %m
   :end2
-  JSONClose %v
-  unset %v
-  unset %u
+  JSONClose %vv
+  unset %vv
+  unset %uu
   unset %m
   unset %message
 }
@@ -232,13 +232,13 @@ on *:text:!api*:#: {
 alias tw_check_api {
   unset %status
   if (!$1) { return }
-  set %u https://api.twitch.tv/kraken/ $+ $4 $+ / $+ $1
-  set %v twcf_ $+ $ticks
-  JSONOpen -ud %v %u
-  set %message $json(%v,$5) 
+  set %uu https://api.twitch.tv/kraken/ $+ $4 $+ / $+ $1
+  set %vv twcf_ $+ $ticks
+  JSONOpen -ud %vv %uu
+  set %message $json(%vv,$5) 
   if (%message = $null) {
     set %status Error
-    set %error $json(%v,error)
+    set %error $json(%vv,error)
     if (%error = $null) {
       set %error No $5 found for $1 $+ .
     }
@@ -246,17 +246,16 @@ alias tw_check_api {
   if ($left(%message,1) = $+($)) {
     set %message $capital($remove(%message,$chr(36)))
   }
-  set %debugmessage message: $left(%message,1)
   :end
   if (%status) { message $3 $user($2) -> Error: %error }
   elseif (!%status) { message $3 $user($2) -> Api Returns: $capital(%message) }
   :end2
-  JSONClose %v
+  JSONClose %vv
   unset %status
   unset %message
   unset %error
-  unset %v
-  unset %u
+  unset %vv
+  unset %uu
 }
 
 on *:text:!level *:#: {
