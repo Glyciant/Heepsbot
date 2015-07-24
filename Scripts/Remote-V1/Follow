@@ -103,6 +103,7 @@ alias twitch_check_new {
   if ($BotSetting(AutoFollow,$1) != $null) {
     message $1 $replace($iif($BotSetting(FollowMessage,$1),$BotSetting(FollowMessage,$1),Thanks for following - ^NICK^),^USER^,$user(%name),^NICK^,%name,^CHAN^,$owner)
   }
+  FollowAddPoints %name $1
   writeini -n BotSettings.ini $1 LastFollower %name
   if ($readini(BotSettings.ini,$chan,Status) != $null) {
     writeini -n BotSettings.ini $1 Follows $calc($BotSetting(Follows,$1) + 1)
