@@ -7,8 +7,8 @@ on *:text:!autopoints*:#: {
   if ($access($nick) <= 400) {
     if ($2 = join) {
       if ($3 isnum) {
-        writeini -n BotSettings.ini $chan JoinPointsNum $4
-        message $chan $user($nick) -> Users will now automatically be given $4 $points when they join the channel.
+        writeini -n BotSettings.ini $chan JoinPointsNum $3
+        message $chan $user($nick) -> Users will now automatically be given $3 $points when they join the channel.
       }
       elseif ($3 = on) {
         if ($BotSetting( JoinPointsNum) = $null) {
@@ -25,14 +25,14 @@ on *:text:!autopoints*:#: {
     elseif ($2 = follow) {
       if ($3 isnum) {
         writeini -n BotSettings.ini $chan FollowPointsNum  $3
-        message $chan $user($nick) -> Users will now automatically be given $4 $points when they follow the channel.
+        message $chan $user($nick) -> Users will now automatically be given $3 $points when they follow the channel.
       }
       elseif ($3 = on) {
-        if ($BotSetting( FollowPointsNum) = $null) {
+        if ($BotSetting(FollowPointsNum) = $null) {
           writeini -n BotSettings.ini $chan FollowPointsNum 50
         }
         writeini -n BotSettings.ini $chan FollowPoints True
-        message $chan $user($nick) -> Users will now automatically be given $BotSetting( FollowPointsNum) $points when they follow the channel.
+        message $chan $user($nick) -> Users will now automatically be given $BotSetting(FollowPointsNum) $points when they follow the channel.
       }
       elseif ($3 = off) {
         remini BotSettings.ini $chan FollowPoints
@@ -42,14 +42,14 @@ on *:text:!autopoints*:#: {
     elseif ($2 = subscribe) {
       if ($3 isnum) {
         writeini -n BotSettings.ini $chan SubPointsNum  $3
-        message $chan $user($nick) -> Users will now automatically be given $4 $points when they subscribe to the channel.
+        message $chan $user($nick) -> Users will now automatically be given $3 $points when they subscribe to the channel.
       }
       elseif ($3 = on) {
         if ($BotSetting( SubPointsNum) = $null) {
           writeini -n BotSettings.ini $chan SubPointsNum 100
         }
         writeini -n BotSettings.ini $chan SubPoints True
-        message $chan $user($nick) -> Users will now automatically be given $BotSetting( SubPointsNum) $points when they subscribe to the channel.
+        message $chan $user($nick) -> Users will now automatically be given $BotSetting(SubPointsNum) $points when they subscribe to the channel.
       }
       elseif ($3 = off) {
         remini BotSettings.ini $chan SubPoints
@@ -106,6 +106,7 @@ alias TimedPoints {
     inc $+(%,p.,$1)
   }  
 }
+
 alias points {
   return $iif($BotSetting(PointsName) != $null,$BotSetting(PointsName),Points)
 }
@@ -176,7 +177,7 @@ alias pointslevel {
 
 on *:text:!level *:#: {
   if ($2 = !points) || ($2 = ! $+ $points) {
-    if ($access($nick) <= 400) {
+    if ($access($nick)<= 400) {
       if ($3 isnum 1-900) {
         writeini -n CommandLevels.ini $chan !points $3
         message $chan $user($nick) -> The command userlevel for ! $+ $points has been updated.
@@ -241,7 +242,7 @@ alias ranklevel {
 }
 
 on *:text:!level rank &:#: {
-  if ($access($nick) <= 400) {
+  if ($access($nick)<= 400) {
     if ($3 isnum 1-900) {
       writeini -n CommandLevels.ini $chan !rank $3
       message $chan $user($nick) -> The command userlevel for !rank has been updated.
@@ -406,13 +407,14 @@ on *:text:*:#: {
   }
 }
 
+
 alias TimedPoints {
   var %points $calc($readini(PointsUpdated.ini,$1,$2) + $3)
   writeini -n PointsUpdated.ini $1 $2 %points
 }
 alias FollowAddPoints {
-  if ($BotSetting( FollowPoints) != $null) {
-    writeini -n PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + $BotSetting( FollowPointsNum)
+  if ($BotSetting( FollowPoints,$2) != $null) {
+    writeini -n PointsUpdated.ini $2 $1 $calc($readini(PointsUpdated.ini,$2,$1) + $BotSetting(FollowPointsNum,$2)
   }
 }
 alias SubAddPoints {
