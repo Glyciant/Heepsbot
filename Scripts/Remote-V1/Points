@@ -86,11 +86,11 @@ on *:text:!autopoints*:#: {
 }
 
 on *:join:#:{
+  if ($BotSetting(JoinPoints) != $null) {
+    writeini PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) + $BotSetting(JoinPointsNum))
+  }
   if ($BotSetting(PointsTimer) != $null) {
     $+(timerpoints.,$chan 0 $iif($BotSetting(PointTimerTime) != $null,$BotSetting(PointTimerTime),60) TimedPoints $chan $iif($BotSetting(PointTimerPoint) != $null,$BotSetting(PointTimerPoint),1))
-  }
-  if ($BotSetting(JoinPoints) != $null) {
-    writeini PointsUpdated.ini $chan $nick $calc($readini(PointsUpdated.ini,$chan,$nick) + $BotSettings(JoinPointsNum))
   }
 }
 
@@ -414,11 +414,11 @@ alias TimedPoints {
 }
 alias FollowAddPoints {
   if ($BotSetting( FollowPoints,$2) != $null) {
-    writeini -n PointsUpdated.ini $2 $1 $calc($readini(PointsUpdated.ini,$2,$1) + $BotSetting(FollowPointsNum,$2)
+    writeini -n PointsUpdated.ini $2 $1 $calc($readini(PointsUpdated.ini,$2,$1) + $BotSetting(FollowPointsNum,$2))
   }
 }
 alias SubAddPoints {
   if ($BotSetting( SubPoints) != $null) {
-    writeini -n PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + $BotSetting( SubPointsNum)
+    writeini -n PointsUpdated.ini $chan $1 $calc($readini(PointsUpdated.ini,$chan,$1) + $BotSetting( SubPointsNum))
   }
 }
