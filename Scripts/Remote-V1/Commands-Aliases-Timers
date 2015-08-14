@@ -235,13 +235,13 @@ on *:text:*:#: {
 ; /CommandRun Channel User Command ToUser
 
 alias CommandRun {
-  if ($access($nick) <= $commandlevel($3)) {
-    if ($readini(Points.ini,$chan,$nick) < $iif($readini(CommandSettings.ini, $+($chan,.,$1) Level) != $null,$readini(CommandSettings.ini, $+($chan,.,$1) Level),0)) {
-      message $chan $user($nick) -> You do not have enough $points to use this command.
+  if ($access($2) <= $commandlevel($3)) {
+    if ($readini(Points.ini,$chan,$2) < $iif($readini(CommandSettings.ini, $+($chan,.,$1) Level) != $null,$readini(CommandSettings.ini, $+($chan,.,$1) Level),0)) {
+      message $chan $user($2) -> You do not have enough $points to use this command.
     }
     if ($readini(CommandSettings.ini, $+($1,.,$3) Add) != $null) { writeini -n PointsUpdated.ini $1 $2 $calc($readini(PointsUpdated.ini,$1,$2) + $readini(CommandSettings.ini, $+($1,.,$3) Add)) }
     if ($readini(CommandSettings.ini, $+($1,.,$3) Cost) != $null) { writeini -n PointsUpdated.ini $1 $2 $calc($readini(PointsUpdated.ini,$1,$2) - $readini(CommandSettings.ini, $+($1,.,$3) Cost)) }
-    if ($access($nick) > 500) {
+    if ($access($2) > 500) {
       if ($readini(CommandSettings.ini, $+($1,.,$3) Timeout) != $null) { message $1 /timeout $2 $readini(CommandSettings.ini, $+($1,.,$3) Timeout) }
     }
     writeini -n CustomCommandsCount.ini $1 $3 $calc($readini(customcommandscount.ini, $1, $3) + 1)
