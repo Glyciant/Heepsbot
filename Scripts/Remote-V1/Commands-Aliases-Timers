@@ -235,7 +235,7 @@ on *:text:*:#: {
 ; /CommandRun Channel User Command ToUser
 
 alias CommandRun {
-  if ($access($2) <= $commandlevel($3,$1)) {
+  if ($access($2) <= $customcommandlevel($3,$1)) {
     if ($readini(Points.ini,$chan,$2) < $iif($readini(CommandSettings.ini, $+($chan,.,$1) Level) != $null,$readini(CommandSettings.ini, $+($chan,.,$1) Level),0)) {
       message $chan $user($2) -> You do not have enough $points to use this command.
     }
@@ -249,6 +249,6 @@ alias CommandRun {
   }
 }
 
-alias commandlevel {
+alias customcommandlevel {
   return $iif($readini(CommandSettings.ini, $+($2,.,$1), Level) != $null,$readini(CommandSettings.ini, $+($2,.,$1), Level),800)
 }
